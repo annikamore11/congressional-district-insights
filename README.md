@@ -3,7 +3,7 @@
 A simple web app to explore campaign finance data for Members of Congress.
 
 ## Demo
-[Demo App](https://your-vercel-url.vercel.app)
+[Demo App](https://congress-finance-app.vercel.app/)
 
 ## Features
 - Select a state and view its members of Congress
