@@ -9,6 +9,7 @@ A simple web app to explore campaign finance data for Members of Congress.
 - Select a state and view its members of Congress
 - Finance overview with charts
 - Top contributors and state-level breakdowns
+- Use the backend directory to find fec endpoints 
 
 ## Tech Stack
 - **Frontend:** React (hosted on Vercel)
