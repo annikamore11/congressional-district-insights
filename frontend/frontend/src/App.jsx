@@ -12,7 +12,7 @@ function App() {
   const [stateTotalsChart, setStateTotalsChart] = useState(null);
   const [contributors, setContributors] = useState([]);
 
-  const API_BASE = "http://127.0.0.1:5001"; // Flask backend URL
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5001";
 
   useEffect(() => {
     fetch(`${API_BASE}/api/states`) 
