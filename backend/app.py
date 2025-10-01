@@ -31,7 +31,7 @@ EXCLUDE_EMPLOYERS = {
 }
 
 app = Flask(__name__)
-CORS(app)  
+CORS(app)
 
 # in-memory cache
 _cache = {"legislators": None, "states": None}
@@ -281,4 +281,4 @@ def api_top_contributors():
     return jsonify({"error": "No valid FEC results found for provided IDs"}), 404
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5001)), debug=True)
+    app.run(debug=True)
