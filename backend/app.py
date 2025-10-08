@@ -4,10 +4,12 @@ import yaml
 from flask import Flask, jsonify, request 
 from flask_cors import CORS
 from dotenv import load_dotenv
+from database.queries import aggregate_state_results, fetch_county_results, fetch_health_state, fetch_health_county
 
 # Load environment variables from .env
 load_dotenv()
 FEC_API_KEY = os.getenv("FEC_API_KEY")
+GEOCODIO_KEY = os.getenv("GEOCODIO_KEY")
 
 # URL for congress-legislators github repo
 LEGIS_URL = "https://raw.githubusercontent.com/unitedstates/congress-legislators/master/legislators-current.yaml"
@@ -152,6 +154,9 @@ def fetch_member_primary_committee(fec_id, cycle=2024):
     data = r.json()
     results = data.get("results", [])
 
+    if not results:
+        return {"error": f"No results found for candidate ID {fec_id}", "status_code": r.status_code}
+
     candidate = results[0]
     principal_committees = candidate.get("principal_committees", [])
     if principal_committees:
@@ -280,5 +285,90 @@ def api_top_contributors():
 
     return jsonify({"error": "No valid FEC results found for provided IDs"}), 404
 
+## Retrieve Historical Election Trends 
+@app.route("/api/state/<state_name>")
+def get_state_results(state_name):
+    results = aggregate_state_results(state_name)
+    return jsonify({
+        "state": state_name,
+        "results": results
+    })
+
+@app.route("/api/county/<state_name>/<county>")
+def get_county_results(state_name, county):
+    print(county)
+    results = fetch_county_results(state_name, county)
+    return jsonify({
+        "state": state_name,
+        "county": county,
+        "results": results
+    })
+
+# Retrieve User's county and reps
+@app.route("/api/reps/")
+def get_reps():
+    """Get representatives from latitude/longitude using geocodio"""
+    latitude = request.args.get("lat")
+    longitude = request.args.get("long")
+    
+    if not latitude or not longitude:
+        return jsonify({"error": "Missing lat or long parameters"}), 400
+    
+    try:
+        resp = requests.get(
+            f"https://api.geocod.io/v1.9/reverse?q={latitude},{longitude}&fields=cd&api_key={GEOCODIO_KEY}",
+            timeout=10
+        )
+        data = resp.json()
+        
+        if data.get("results"):
+            result = data["results"][0]
+            county = result.get("address_components", {}).get("county")
+            cd_fields = result.get("fields", {}).get("congressional_districts", [])
+            
+            if cd_fields:
+                # Extract just the legislators from the first district
+                legislators = cd_fields[0].get("current_legislators", [])
+                
+                # Format the response
+                formatted_legislators = []
+                for leg in legislators:
+                    formatted_legislators.append({
+                        "name": f"{leg['bio']['first_name']} {leg['bio']['last_name']}",
+                        "role": "sen" if leg["type"] == "senator" else "rep",
+                        "party": leg["bio"]["party"],
+                        "bio_id": leg["references"]["bioguide_id"],
+                        "photo_url": leg["bio"]["photo_url"],
+                        "district": cd_fields[0].get("district_number") if leg["type"] == "representative" else None,
+                        "phone": leg["contact"]["phone"],
+                        "website": leg["contact"]["url"]
+                    })
+                
+                return jsonify({"county": county, "results": formatted_legislators})
+        
+        return jsonify({"error": "No representatives found"}), 404
+    except Exception as e:
+        print(f"Error in /api/reps: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        return jsonify({"error": str(e)}), 500
+
+## Retrieve County Health Ratings Data
+@app.route("/api/health/state/<state_full>/<state_name>")
+def get_health_state_results(state_full, state_name):
+    results = fetch_health_state(state_full, state_name)
+    return jsonify({
+        "state": state_name,
+        "results": results
+    })
+
+@app.route("/api/health/county/<state_name>/<county>")
+def get_health_county_results(state_name, county):
+    results = fetch_health_county(state_name, county)
+    return jsonify({
+        "state": state_name,
+        "county": county,
+        "results": results
+    })
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, port=5001)
