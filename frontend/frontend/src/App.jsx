@@ -208,10 +208,6 @@ export default function App() {
               <MapPinHouse className="w-5 h-5 mr-2" />
               <span>{region} Overview</span>
             </li>
-            <li className="flex items-center p-2 rounded hover:bg-gray-200 cursor-pointer text-gray-700">
-              <MapPin className="w-5 h-5 mr-2" />
-              <span>United States Overview</span>
-            </li>
             <div className="border-t border-gray-300 my-2"></div>
             <li className="flex items-center p-2 rounded hover:bg-gray-200 cursor-pointer text-gray-700">
               <User className="w-5 h-5 mr-2" />
