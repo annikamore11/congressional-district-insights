@@ -4,7 +4,10 @@ import yaml
 from flask import Flask, jsonify, request 
 from flask_cors import CORS
 from dotenv import load_dotenv
-from database.queries import aggregate_state_results, fetch_county_results, fetch_health_state, fetch_health_county
+from database.queries import (
+    aggregate_state_results, fetch_county_results, 
+    fetch_health_state, fetch_health_county, 
+    fetch_demographics_state, fetch_demographics_county)
 
 # Load environment variables from .env
 load_dotenv()
@@ -365,6 +368,24 @@ def get_health_state_results(state_full, state_name):
 @app.route("/api/health/county/<state_name>/<county>")
 def get_health_county_results(state_name, county):
     results = fetch_health_county(state_name, county)
+    return jsonify({
+        "state": state_name,
+        "county": county,
+        "results": results
+    })
+
+## Retrieve Census Data 
+@app.route("/api/demographics/state/<state_full>/<state_name>")
+def get_demographics_state_results(state_full, state_name):
+    results = fetch_demographics_state(state_full, state_name)
+    return jsonify({
+        "state": state_name,
+        "results": results
+    })
+
+@app.route("/api/demographics/county/<state_name>/<county>")
+def get_demographics_county_results(state_name, county):
+    results = fetch_demographics_county(state_name, county)
     return jsonify({
         "state": state_name,
         "county": county,

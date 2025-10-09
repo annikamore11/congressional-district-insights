@@ -6,6 +6,34 @@ import HealthTab from "../components/districtTabs/HealthTab";
 import EducationTab from "../components/districtTabs/EducationTab";
 import RepCard from "../components/districtTabs/RepCard";
 
+// Process election data into percentage by party for most recent years
+function processElectionData(rawResults, setChartFn) {
+    // Get last 6 election years
+    const years = [...new Set(rawResults.map(r => r.year))].sort((a, b) => b - a).slice(0, 6).reverse();
+    
+    const chartData = years.map(year => {
+        const yearData = rawResults.filter(r => r.year === year);
+        const dem = yearData.filter(r => r.party.toLowerCase() === "democrat")
+            .reduce((sum, r) => sum + r.candidatevotes, 0);
+        const rep = yearData.filter(r => r.party.toLowerCase() === "republican")
+            .reduce((sum, r) => sum + r.candidatevotes, 0);
+        const other = yearData.filter(r => 
+            r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican"
+        ).reduce((sum, r) => sum + r.candidatevotes, 0);
+        
+        const total = dem + rep + other;
+        
+        return {
+            year: year.toString(),
+            Democrat: total > 0 ? parseFloat(((dem / total) * 100).toFixed(1)) : 0,
+            Republican: total > 0 ? parseFloat(((rep / total) * 100).toFixed(1)) : 0,
+            Other: total > 0 ? parseFloat(((other / total) * 100).toFixed(1)) : 0
+        };
+    });
+    
+    setChartFn(chartData);
+}
+
 export default function DistrictContent({ state_name, state_full, lat, long }) {
     const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5001";
 
@@ -14,11 +42,25 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
     const [stateResults, setStateResults] = useState([]);
     const [countyResults, setCountyResults] = useState([]);
     const [healthStateResults, setHealthStateResults] = useState([]);
-    const [healthCountyResults, setHealthCountyResults] = useState([])
+    const [healthCountyResults, setHealthCountyResults] = useState([]);
+    const [demograpicsStateResults, setDemographicsStateResults] = useState([]);
+    const [demographicsCountyResults, setDemographicsCountyResults] = useState([]);
     const [members, setMembers] = useState([]);
     const [county, setCounty] = useState(null);
     const [stateChartData, setStateChartData] = useState([]);
     const [countyChartData, setCountyChartData] = useState([]);
+
+    const senators = members.filter(m => m.role === "sen");
+    const houseReps = members.filter(m => m.role === "rep");
+
+    // Determine which reps to highlight based on active tab
+    const highlightedReps = activeTab === "state" 
+        ? senators.map(s => s.bio_id)
+        : members.map(m => m.bio_id);
+
+    const currentChartData = activeTab === "state" ? stateChartData : countyChartData;
+    const currentHealthData = activeTab === "state" ? healthStateResults : healthCountyResults;
+    const currentDemographicsData = activeTab === "state" ? demograpicsStateResults : demographicsCountyResults;
 
     useEffect(() => {
         async function fetchUserReps() {
@@ -99,44 +141,37 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
         }
     }, [state_name, county, activeTab]);
 
-    // Process election data into percentage by party for most recent years
-    function processElectionData(rawResults, setChartFn) {
-        // Get last 6 election years
-        const years = [...new Set(rawResults.map(r => r.year))].sort((a, b) => b - a).slice(0, 6).reverse();
-        
-        const chartData = years.map(year => {
-            const yearData = rawResults.filter(r => r.year === year);
-            const dem = yearData.filter(r => r.party.toLowerCase() === "democrat")
-                .reduce((sum, r) => sum + r.candidatevotes, 0);
-            const rep = yearData.filter(r => r.party.toLowerCase() === "republican")
-                .reduce((sum, r) => sum + r.candidatevotes, 0);
-            const other = yearData.filter(r => 
-                r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican"
-            ).reduce((sum, r) => sum + r.candidatevotes, 0);
-            
-            const total = dem + rep + other;
-            
-            return {
-                year: year.toString(),
-                Democrat: total > 0 ? parseFloat(((dem / total) * 100).toFixed(1)) : 0,
-                Republican: total > 0 ? parseFloat(((rep / total) * 100).toFixed(1)) : 0,
-                Other: total > 0 ? parseFloat(((other / total) * 100).toFixed(1)) : 0
-            };
-        });
-        
-        setChartFn(chartData);
-    }
+    // Fetch county health ratings data for use in the health tab
+    useEffect(() => {
+        async function fetchDemographicsData() {
+            try {
+                let resp;
+                if (activeTab === "state") {
+                    resp = await fetch(`${API_BASE}/api/demographics/state/${state_full}/${state_name}`);
+                } else {
+                    resp = await fetch(`${API_BASE}/api/demographics/county/${state_name}/${county}`);
+                }
+                
+                const data = await resp.json();
+                if (data.results) {
+                    if (activeTab === "state") {
+                        setDemographicsStateResults(data.results);
+                    } else {
+                        setDemographicsCountyResults(data.results);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch demographics data results:", err);
+            }
+        }
 
-    const senators = members.filter(m => m.role === "sen");
-    const houseReps = members.filter(m => m.role === "rep");
+        if (state_name && (activeTab === "state" || (activeTab === "county" && county))) {
+            fetchDemographicsData();
+        }
+    }, [state_name, county, activeTab]);
 
-    // Determine which reps to highlight based on active tab
-    const highlightedReps = activeTab === "state" 
-        ? senators.map(s => s.bio_id)
-        : members.map(m => m.bio_id);
 
-    const currentChartData = activeTab === "state" ? stateChartData : countyChartData;
-    const currentHealthData = activeTab === "state" ? healthStateResults : healthCountyResults;
+    
 
     return (
         <div className="flex h-full">
@@ -227,7 +262,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
 
                         {/* Tab Content */}
                         {activeSubTab === "civics" && <CivicsTab chartData={currentChartData} />}
-                        {activeSubTab === "demographics" && <DemographicsTab />}
+                        {activeSubTab === "demographics" && <DemographicsTab demographicsData={currentDemographicsData} />}
                         {activeSubTab === "economy" && <EconomyTab />}
                         {activeSubTab === "health" && <HealthTab healthData={currentHealthData} />}
                         {activeSubTab === "education" && <EducationTab />}
