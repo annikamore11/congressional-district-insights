@@ -53,8 +53,15 @@ export default function HealthTab({ healthData }) {
     const processedData = useMemo(() => {
         if (!healthData || healthData.length === 0) return null;
 
-        // Group by measure name
-        const byMeasure = healthData.reduce((acc, row) => {
+        // Separate US data from state/county data
+        const usData = healthData.filter(row => row.state === 'US' || row.state === 'us');
+        const localData = healthData.filter(row => row.state !== 'US' && row.state !== 'us');
+
+        // Get the location name from the first local data point
+        const locationName = localData.length > 0 ? localData[0].county : 'Local';
+
+        // Group by measure name for local data
+        const byMeasure = localData.reduce((acc, row) => {
             if (!acc[row.measurename]) {
                 acc[row.measurename] = [];
             }
@@ -62,14 +69,33 @@ export default function HealthTab({ healthData }) {
             return acc;
         }, {});
 
-        // Process premature death for line chart (last 10 years only)
-        const prematureDeath = byMeasure.premature_death
+        // Group by measure name for US data
+        const usByMeasure = usData.reduce((acc, row) => {
+            if (!acc[row.measurename]) {
+                acc[row.measurename] = [];
+            }
+            acc[row.measurename].push(row);
+            return acc;
+        }, {});
+
+        // Process premature death for line chart with US comparison (last 10 years only)
+        const localPrematureDeath = byMeasure.premature_death
             ?.sort((a, b) => a.year_numeric - b.year_numeric)
-            .slice(-10)  // Take last 10 years
-            .map(d => ({
-                year: d.year_numeric,
-                value: d.rawvalue
-            })) || [];
+            .slice(-10) || [];
+        
+        const usPrematureDeath = usByMeasure.premature_death
+            ?.sort((a, b) => a.year_numeric - b.year_numeric)
+            .slice(-10) || [];
+
+        // Combine local and US data for the chart
+        const prematureDeath = localPrematureDeath.map(local => {
+            const usMatch = usPrematureDeath.find(us => us.year_numeric === local.year_numeric);
+            return {
+                year: local.year_numeric,
+                local: local.rawvalue,
+                us: usMatch ? usMatch.rawvalue : null
+            };
+        });
 
         // Get latest values for stat cards
         const getLatest = (measureName) => {
@@ -95,6 +121,7 @@ export default function HealthTab({ healthData }) {
         const preventableStays = getLatest("preventable_hospital_stays");
 
         return {
+            locationName,
             prematureDeath,
             uninsuredAdults,
             primaryCarePhysicians,
@@ -167,15 +194,30 @@ export default function HealthTab({ healthData }) {
                             />
                             <Tooltip 
                                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
-                                formatter={(value) => [value.toLocaleString(), "Years Lost"]}
+                                formatter={(value, name) => {
+                                    const label = name === 'local' ? processedData.locationName : 'United States';
+                                    return [value.toLocaleString(), label];
+                                }}
+                            />
+                            <Legend 
+                                formatter={(value) => value === 'local' ? processedData.locationName : 'United States'}
                             />
                             <Line 
                                 type="monotone" 
-                                dataKey="value" 
+                                dataKey="local" 
                                 stroke="#ef4444" 
                                 strokeWidth={3}
                                 dot={{ fill: '#ef4444', r: 4 }}
-                                name="Premature Death"
+                                name="local"
+                            />
+                            <Line 
+                                type="monotone" 
+                                dataKey="us" 
+                                stroke="#94a3b8" 
+                                strokeWidth={2}
+                                strokeDasharray="5 5"
+                                dot={{ fill: '#94a3b8', r: 3 }}
+                                name="us"
                             />
                         </LineChart>
                     </ResponsiveContainer>
