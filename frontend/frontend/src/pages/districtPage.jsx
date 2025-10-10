@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 import CivicsTab from "../components/districtTabs/CivicsTab";
 import DemographicsTab from "../components/districtTabs/DemographicsTab";
 import EconomyTab from "../components/districtTabs/EconomyTab";
@@ -39,6 +40,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
 
     const [activeTab, setActiveTab] = useState("state");
     const [activeSubTab, setActiveSubTab] = useState("civics");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [stateResults, setStateResults] = useState([]);
     const [countyResults, setCountyResults] = useState([]);
     const [healthStateResults, setHealthStateResults] = useState([]);
@@ -202,15 +204,43 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
         }
     }, [state_name, county, activeTab]);
 
-
-    
-
     return (
-        <div className="flex h-full">
+        <div className="flex h-full relative">
+            {/* Mobile Menu Button */}
+            {!sidebarOpen && (
+                <button
+                    onClick={() => setSidebarOpen(true)}
+                    className="lg:hidden fixed top-19 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg"
+                >
+                    <Menu size={24} />
+                </button>
+            )}
+
+            {/* Overlay for mobile */}
+            {sidebarOpen && (
+                <div
+                    className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
+                    onClick={() => setSidebarOpen(false)}
+                />
+            )}
+
             {/* Left Sidebar - Representatives */}
-            <div className="w-72 bg-gray-50 border-r border-gray-200 overflow-y-auto">
+            <div className={`
+                fixed lg:static inset-y-0 left-0 z-40
+                w-72 bg-gray-50 border-r border-gray-200 overflow-y-auto
+                transform transition-transform duration-300 ease-in-out
+                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+            `}>
                 <div className="p-4">
-                    <h2 className="text-lg font-bold mb-3 text-gray-800">Your Representatives</h2>
+                    <div className="flex items-center justify-between mb-3 lg:block">
+                        <h2 className="text-lg font-bold text-gray-800">Your Representatives</h2>
+                        <button
+                            onClick={() => setSidebarOpen(false)}
+                            className="lg:hidden p-1"
+                        >
+                            <X size={20} />
+                        </button>
+                    </div>
                     
                     {senators.length > 0 && (
                         <div className="mb-4">
@@ -245,13 +275,13 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
             </div>
             
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col overflow-hidden">
+            <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
                 {/* State/County Tabs */}
-                <div className="border-b border-gray-200 bg-white px-6">
-                    <div className="flex space-x-8">
+                <div className="border-b border-gray-200 bg-white px-4 sm:px-6 mt-16 lg:mt-0">
+                    <div className="flex space-x-4 sm:space-x-8 overflow-x-auto">
                         <button
                             onClick={() => setActiveTab("state")}
-                            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                            className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                                 activeTab === "state"
                                     ? "border-purple-500 text-purple-600"
                                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -261,7 +291,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                         </button>
                         <button
                             onClick={() => setActiveTab("county")}
-                            className={`py-4 px-1 border-b-2 font-medium text-sm transition-colors ${
+                            className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                                 activeTab === "county"
                                     ? "border-purple-500 text-purple-600"
                                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
@@ -274,14 +304,14 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto bg-gray-50">
-                    <div className="max-w-6xl mx-auto p-6">
+                    <div className="max-w-6xl mx-auto p-4 sm:p-6">
                         {/* Sub-tabs */}
-                        <div className="flex space-x-1 mb-6 bg-gray-200 rounded-lg p-1">
+                        <div className="flex flex-wrap sm:flex-nowrap gap-1 mb-6 bg-gray-200 rounded-lg p-1">
                             {["civics", "demographics", "economy", "health", "education"].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveSubTab(tab)}
-                                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors capitalize ${
+                                    className={`flex-1 py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors capitalize whitespace-nowrap ${
                                         activeSubTab === tab
                                             ? "bg-white text-gray-900 shadow"
                                             : "text-gray-600 hover:text-gray-900"
