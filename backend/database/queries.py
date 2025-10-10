@@ -26,3 +26,12 @@ def fetch_demographics_state(state_full: str, state_name: str):
 def fetch_demographics_county(state_name: str, county: str):
     response = supabase.rpc("fetch_demographics_county", {"state_param": state_name, "county_param": county}).execute()
     return response.data
+
+## Supabase queries for Education Data
+def fetch_education_state(state_full: str, state_name: str):
+    response = supabase.rpc("fetch_education_state", {"state_param": state_name, "county_param": state_full}).execute()
+    return response.data
+
+def fetch_education_county(state_name: str, county: str):
+    response = supabase.rpc("fetch_education_county", {"state_param": state_name, "county_param": county}).execute()
+    return response.data

@@ -9,7 +9,7 @@ library(readr)
 options(tigris_use_cache = TRUE)
 
 # Set Census API key 
-census_api_key(Sys.getenv("CENSUS_KEY"), install = TRUE, overwrite = TRUE)
+census_api_key(Sys.getenv("CENSUS_API_KEY"), install = TRUE, overwrite = TRUE)
 
 # Variable Selection
 acs_vars <- load_variables(
@@ -17,6 +17,12 @@ acs_vars <- load_variables(
   dataset = c("acs5"),
   cache = TRUE
 )
+
+# Search for variables containing a specific word or search for descriptions based on variable code
+pop_vars <- acs_vars %>%
+  filter(grepl("B14", name, ignore.case = TRUE))
+
+
 
 # Choose variables 
 variables_of_interest <- c(
@@ -56,7 +62,17 @@ variables_of_interest <- c(
   uninsured_under_19 = "B27010_017",
   uninsured_19_30 = "B27010_033",
   uninsured_35_64 = "B27010_050",
-  uninsured_65_over = "B27010_066"
+  uninsured_65_over = "B27010_066",
+  
+  pop_education = "B14007_001",         #Total Education survey
+  enrolled = "B14007_002",              # Total enrolled
+  female_public_school = "B14003_031",  # Total female enrolled in public school
+  female_private_school = "B14003_040",  # Total female enrolled in private school
+  male_public_school = "B14003_003",    # Total male enrolled in public school
+  male_private_school = "B14003_012"    # Total male enrolled in private school
+  
+  
+  
 )
 
 get_clean_acs <- function(geo, year) {
@@ -93,11 +109,17 @@ get_clean_acs <- function(geo, year) {
       pct_ba_or_higher = (bachelors + masters + prof_school + doctorate) / pop_25_over * 100,
       pct_doctorate = doctorate / pop_25_over * 100,
       
-      pct_uninsured = ((uninsured_under_19 + uninsured_19_30 + uninsured_35_64 + uninsured_65_over) / total_insur_pop)
+      pct_uninsured = ((uninsured_under_19 + uninsured_19_30 + uninsured_35_64 + uninsured_65_over) / total_insur_pop),
+      
+      
+      pct_enrolled = (enrolled / pop_education) * 100,
+      pct_public_school = ((female_public_school + male_public_school) / pop_education) * 100,
+      pct_private_school = ((female_private_school + male_private_school) / pop_education) * 100
+      
     ) %>%
     mutate(geography = geo, year = year) %>%   # <- tag geography + year
     select(GEOID, NAME, state_name = NAME, geography, year,
-           total_pop, pct_female:pct_uninsured, med_household_income)
+           total_pop, pct_female:pct_private_school, med_household_income)
   
   return(dat)
 }

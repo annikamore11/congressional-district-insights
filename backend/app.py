@@ -7,7 +7,9 @@ from dotenv import load_dotenv
 from database.queries import (
     aggregate_state_results, fetch_county_results, 
     fetch_health_state, fetch_health_county, 
-    fetch_demographics_state, fetch_demographics_county)
+    fetch_demographics_state, fetch_demographics_county,
+    fetch_education_state, fetch_education_county
+    )
 
 # Load environment variables from .env
 load_dotenv()
@@ -386,6 +388,24 @@ def get_demographics_state_results(state_full, state_name):
 @app.route("/api/demographics/county/<state_name>/<county>")
 def get_demographics_county_results(state_name, county):
     results = fetch_demographics_county(state_name, county)
+    return jsonify({
+        "state": state_name,
+        "county": county,
+        "results": results
+    })
+
+## Retrieve Education Data 
+@app.route("/api/education/state/<state_full>/<state_name>")
+def get_education_state_results(state_full, state_name):
+    results = fetch_education_state(state_full, state_name)
+    return jsonify({
+        "state": state_name,
+        "results": results
+    })
+
+@app.route("/api/education/county/<state_name>/<county>")
+def get_education_county_results(state_name, county):
+    results = fetch_education_county(state_name, county)
     return jsonify({
         "state": state_name,
         "county": county,
