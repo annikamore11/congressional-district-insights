@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { LineChart, Line, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import StatCarousel from "./StatCarousel";
 
 export default function EconomyTab({ economyData }) {
     const processedData = useMemo(() => {
@@ -161,7 +162,7 @@ export default function EconomyTab({ economyData }) {
     return (
         <div className="space-y-6">
             {/* Key Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <StatCarousel>
                 <StatCard
                     title="Median Household Income"
                     value={`$${(processedData.medianIncome.value / 1000).toFixed(0)}k`}
@@ -192,7 +193,7 @@ export default function EconomyTab({ economyData }) {
                     trend={processedData.laborForce.change}
                     trendLabel="vs prior year"
                 />
-            </div>
+            </StatCarousel>
 
             {/* Income & Employment Trends */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -287,7 +288,7 @@ export default function EconomyTab({ economyData }) {
                     Median rent and home values compared to national averages
                 </p>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
+                <StatCarousel>
                     <StatCard
                         title="Median Rent"
                         value={`$${(processedData.medianRent.value).toLocaleString()}`}
@@ -327,7 +328,7 @@ export default function EconomyTab({ economyData }) {
                             Homeowners spending 30%+ on mortgage
                         </p>
                     </div>
-                </div>
+                </StatCarousel>
             </div>
 
             {/* Policy Implications */}
