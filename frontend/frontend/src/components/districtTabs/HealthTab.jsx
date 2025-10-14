@@ -1,136 +1,66 @@
-
-function RiskFactorCard({ title, value, unit = "", change, year, inverse = false, decimals = 0, formatAsRatio=false, isDecimalPercent=false, subtitle = "" }) {
-    const getTrendIcon = () => {
-        if (change === null || change === undefined) return <Minus size={16} className="text-gray-400" />;
-        
-        const isPositive = change > 0;
-        const isGood = inverse ? !isPositive : isPositive;
-        
-        if (Math.abs(change) < 0.5) return <Minus size={16} className="text-gray-400" />;
-        
-        return isPositive ? 
-            <TrendingUp size={16} className={isGood ? "text-green-600" : "text-red-600"} /> :
-            <TrendingDown size={16} className={isGood ? "text-green-600" : "text-red-600"} />;
-    };
-
-    const getChangeColor = () => {
-        if (change === null || change === undefined || Math.abs(change) < 0.5) return "text-gray-500";
-        const isPositive = change > 0;
-        const isGood = inverse ? !isPositive : isPositive;
-        return isGood ? "text-green-600" : "text-red-600";
-    };
-
-    return (
-        <div className="border-b pb-3 last:border-b-0 last:pb-0">
-            <p className="text-sm text-gray-600 mb-1">{title}</p>
-            <div className="flex items-baseline justify-between">
-                <p className="text-2xl font-bold text-gray-900">
-                    {value !== null && value !== undefined ? 
-                    formatAsRatio ? `1:${Math.round(value)}` : 
-                    isDecimalPercent ? `${(value * 100).toFixed(decimals)}${unit}` :  // <-- THIS LINE
-                    `${value.toFixed(decimals)}${unit}`
-                    : "—"}
-                </p>
-                <div className="flex items-center gap-1">
-                    {getTrendIcon()}
-                    <span className={`text-sm font-medium ${getChangeColor()}`}>
-                        {change !== null && change !== undefined && Math.abs(change) >= 0.5 ? 
-                            `${change > 0 ? '+' : ''}${change.toFixed(1)}% vs prior year` : "—"}
-                    </span>
-                </div>
-            </div>
-            <p className="text-xs text-gray-500 mt-1">
-                {subtitle && `${subtitle} • `}{year ? `${year}` : "No data"}
-            </p>
-        </div>
-    );
-}import React, { useMemo } from "react";
+import React, { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
-import { TrendingUp, TrendingDown, Minus, Plus } from "lucide-react";
+import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 
 export default function HealthTab({ healthData }) {
-    // Process data for each metric
     const processedData = useMemo(() => {
         if (!healthData || healthData.length === 0) return null;
 
-        // Separate US data from state/county data
+        // Separate US data from local data
         const usData = healthData.filter(row => row.state === 'US' || row.state === 'us');
         const localData = healthData.filter(row => row.state !== 'US' && row.state !== 'us');
 
-        // Get the location name from the first local data point
+        // Get location name
         const locationName = localData.length > 0 ? localData[0].county : 'Local';
 
-        // Group by measure name for local data
-        const byMeasure = localData.reduce((acc, row) => {
-            if (!acc[row.measurename]) {
-                acc[row.measurename] = [];
-            }
-            acc[row.measurename].push(row);
-            return acc;
-        }, {});
+        // Sort by year
+        const sortedLocal = localData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
+        const sortedUS = usData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
-        // Group by measure name for US data
-        const usByMeasure = usData.reduce((acc, row) => {
-            if (!acc[row.measurename]) {
-                acc[row.measurename] = [];
-            }
-            acc[row.measurename].push(row);
-            return acc;
-        }, {});
+        // Filter data to only include years up to 2021 for premature death
+        const localUpTo2021 = sortedLocal.filter(row => parseInt(row.year) <= 2021);
+        const usUpTo2021 = sortedUS.filter(row => parseInt(row.year) <= 2021);
 
-        // Process premature death for line chart with US comparison (last 10 years only)
-        const localPrematureDeath = byMeasure.premature_death
-            ?.sort((a, b) => a.year_numeric - b.year_numeric)
-            .slice(-10) || [];
-        
-        const usPrematureDeath = usByMeasure.premature_death
-            ?.sort((a, b) => a.year_numeric - b.year_numeric)
-            .slice(-10) || [];
-
-        // Combine local and US data for the chart
-        const prematureDeath = localPrematureDeath.map(local => {
-            const usMatch = usPrematureDeath.find(us => us.year_numeric === local.year_numeric);
+        // Premature death trend (last 10 years, up to 2021)
+        const prematureDeathTrend = localUpTo2021.slice(-10).map(local => {
+            const usMatch = usUpTo2021.find(us => us.year === local.year);
             return {
-                year: local.year_numeric,
-                local: local.rawvalue,
-                us: usMatch ? usMatch.rawvalue : null
+                year: local.year,
+                local: parseFloat(local.premature_death) || null,
+                us: parseFloat(usMatch?.premature_death) || null
             };
-        });
+        }).filter(d => d.local !== null || d.us !== null); // Remove years with no data
 
-        // Get latest values for stat cards
-        const getLatest = (measureName) => {
-            const data = byMeasure[measureName];
-            if (!data || data.length === 0) return null;
-            const sorted = data.sort((a, b) => b.year_numeric - a.year_numeric);
-            const latest = sorted[0];
-            const previous = sorted[1];
+        // Helper to get latest value and calculate change for a specific field
+        const getMetric = (field) => {
+            // Find the most recent non-null value for this field
+            const dataWithField = sortedLocal.filter(row => row[field] !== null && row[field] !== undefined);
+            if (dataWithField.length === 0) return { value: null, year: null, change: null };
+
+            const latest = dataWithField[dataWithField.length - 1];
+            const previous = dataWithField[dataWithField.length - 2];
+            
+            const latestValue = parseFloat(latest[field]);
+            const previousValue = previous ? parseFloat(previous[field]) : null;
+
             return {
-                value: latest.rawvalue,
-                year: latest.year_numeric,
-                change: previous ? ((latest.rawvalue - previous.rawvalue) / previous.rawvalue) * 100 : null
+                value: latestValue || null,
+                year: latest.year,
+                change: (latestValue && previousValue) ? ((latestValue - previousValue) / previousValue) * 100 : null
             };
         };
 
-        const uninsuredAdults = getLatest("uninsured");
-        const primaryCarePhysicians = getLatest("prim_care_physicians");
-        const dentists = getLatest("dentists");
-        const mammography = getLatest("mammography_screening");
-        const fluVaccinations = getLatest("flu_vaccinations");
-        const alcoholDeaths = getLatest("alcohol_impaired_driving_deaths");
-        const stiRate = getLatest("sexually_transmitted_infections");
-        const preventableStays = getLatest("preventable_hospital_stays");
-
         return {
             locationName,
-            prematureDeath,
-            uninsuredAdults,
-            primaryCarePhysicians,
-            dentists,
-            mammography,
-            fluVaccinations,
-            alcoholDeaths,
-            stiRate,
-            preventableStays
+            prematureDeathTrend,
+            uninsured: getMetric('pct_uninsured'),
+            primaryCarePhysicians: getMetric('prim_care_physicians'),
+            dentists: getMetric('dentists'),
+            mammography: getMetric('mammography_screening'),
+            fluVaccinations: getMetric('flu_vaccinations'),
+            alcoholDeaths: getMetric('alcohol_deaths'),
+            stiRate: getMetric('sexually_transmitted_infections'),
+            preventableStays: getMetric('preventable_hospital_stays')
         };
     }, [healthData]);
 
@@ -159,12 +89,12 @@ export default function HealthTab({ healthData }) {
     const preventiveCareData = [
         { 
             name: "Mammography Screening", 
-            value: processedData.mammography?.value * 100 || 0,
+            value: (processedData.mammography?.value || 0) * 100,
             fill: "#3b82f6"
         },
         { 
             name: "Flu Vaccinations", 
-            value: processedData.fluVaccinations?.value *100 || 0,
+            value: (processedData.fluVaccinations?.value || 0) * 100,
             fill: "#8b5cf6"
         }
     ];
@@ -177,12 +107,12 @@ export default function HealthTab({ healthData }) {
                     Health Outcomes
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                    Years of potential life lost before age 75 per 100,000 population
+                    Years of potential life lost before age 75 per 100,000 population (through 2021)
                 </p>
 
-                {processedData.prematureDeath.length > 0 ? (
+                {processedData.prematureDeathTrend.length > 0 ? (
                     <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={processedData.prematureDeath}>
+                        <LineChart data={processedData.prematureDeathTrend}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                             <XAxis 
                                 dataKey="year" 
@@ -196,7 +126,7 @@ export default function HealthTab({ healthData }) {
                                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
                                 formatter={(value, name) => {
                                     const label = name === 'local' ? processedData.locationName : 'United States';
-                                    return [value.toLocaleString(), label];
+                                    return [value?.toLocaleString() || '—', label];
                                 }}
                             />
                             <Legend 
@@ -209,6 +139,7 @@ export default function HealthTab({ healthData }) {
                                 strokeWidth={3}
                                 dot={{ fill: '#ef4444', r: 4 }}
                                 name="local"
+                                connectNulls
                             />
                             <Line 
                                 type="monotone" 
@@ -218,6 +149,7 @@ export default function HealthTab({ healthData }) {
                                 strokeDasharray="5 5"
                                 dot={{ fill: '#94a3b8', r: 3 }}
                                 name="us"
+                                connectNulls
                             />
                         </LineChart>
                     </ResponsiveContainer>
@@ -234,16 +166,16 @@ export default function HealthTab({ healthData }) {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <HealthStatCard
                         title="Uninsured Adults"
-                        value={processedData.uninsuredAdults?.value}
+                        value={processedData.uninsured?.value}
                         unit="%"
-                        change={processedData.uninsuredAdults?.change}
-                        year={processedData.uninsuredAdults?.year}
+                        change={processedData.uninsured?.change}
+                        year={processedData.uninsured?.year}
                         inverse={true}
                         isDecimalPercent={true}
                         decimals={1}
                     />
                     <HealthStatCard
-                        title="Primary Care Physicians to Patient Ratio"
+                        title="Primary Care Physicians"
                         value={processedData.primaryCarePhysicians?.value}
                         unit=""
                         change={processedData.primaryCarePhysicians?.change}
@@ -253,7 +185,7 @@ export default function HealthTab({ healthData }) {
                         formatAsRatio={true}
                     />
                     <HealthStatCard
-                        title="Dentists to Patient Ratio"
+                        title="Dentists"
                         value={processedData.dentists?.value}
                         unit=""
                         change={processedData.dentists?.change}
@@ -365,15 +297,15 @@ function HealthStatCard({ title, value, unit = "", change, year, inverse = false
             <p className="text-2xl font-bold text-gray-900 mb-1">
                 {value !== null && value !== undefined ? 
                     formatAsRatio ? `1:${Math.round(value)}` : 
-                    isDecimalPercent ? `${(value * 100).toFixed(decimals)}${unit}` :  // <-- THIS LINE
+                    isDecimalPercent ? `${(value * 100).toFixed(decimals)}${unit}` :
                     `${value.toFixed(decimals)}${unit}`
                     : "—"}
             </p>
             <div className="flex items-center gap-1 text-xs">
                 {getTrendIcon()}
-                <span className={`text-sm font-medium ${getChangeColor()}`}>
-                        {change !== null && change !== undefined && Math.abs(change) >= 0.5 ? 
-                            `${change > 0 ? '+' : ''}${change.toFixed(1)}% vs prior year` : "—"}
+                <span className={`font-medium ${getChangeColor()}`}>
+                    {change !== null && change !== undefined && Math.abs(change) >= 0.5 ? 
+                        `${change > 0 ? '+' : ''}${change.toFixed(1)}%` : "—"}
                 </span>
             </div>
             {year && (
@@ -381,6 +313,53 @@ function HealthStatCard({ title, value, unit = "", change, year, inverse = false
                     Latest: {year}
                 </p>
             )}
+        </div>
+    );
+}
+
+function RiskFactorCard({ title, value, unit = "", change, year, inverse = false, decimals = 0, formatAsRatio = false, isDecimalPercent = false, subtitle = "" }) {
+    const getTrendIcon = () => {
+        if (change === null || change === undefined) return <Minus size={16} className="text-gray-400" />;
+        
+        const isPositive = change > 0;
+        const isGood = inverse ? !isPositive : isPositive;
+        
+        if (Math.abs(change) < 0.5) return <Minus size={16} className="text-gray-400" />;
+        
+        return isPositive ? 
+            <TrendingUp size={16} className={isGood ? "text-green-600" : "text-red-600"} /> :
+            <TrendingDown size={16} className={isGood ? "text-green-600" : "text-red-600"} />;
+    };
+
+    const getChangeColor = () => {
+        if (change === null || change === undefined || Math.abs(change) < 0.5) return "text-gray-500";
+        const isPositive = change > 0;
+        const isGood = inverse ? !isPositive : isPositive;
+        return isGood ? "text-green-600" : "text-red-600";
+    };
+
+    return (
+        <div className="border-b pb-3 last:border-b-0 last:pb-0">
+            <p className="text-sm text-gray-600 mb-1">{title}</p>
+            <div className="flex items-baseline justify-between">
+                <p className="text-2xl font-bold text-gray-900">
+                    {value !== null && value !== undefined ? 
+                        formatAsRatio ? `1:${Math.round(value)}` : 
+                        isDecimalPercent ? `${(value * 100).toFixed(decimals)}${unit}` :
+                        `${value.toFixed(decimals)}${unit}`
+                        : "—"}
+                </p>
+                <div className="flex items-center gap-1">
+                    {getTrendIcon()}
+                    <span className={`text-sm font-medium ${getChangeColor()}`}>
+                        {change !== null && change !== undefined && Math.abs(change) >= 0.5 ? 
+                            `${change > 0 ? '+' : ''}${change.toFixed(1)}%` : "—"}
+                    </span>
+                </div>
+            </div>
+            <p className="text-xs text-gray-500 mt-1">
+                {subtitle && `${subtitle} • `}{year ? `${year}` : "No data"}
+            </p>
         </div>
     );
 }

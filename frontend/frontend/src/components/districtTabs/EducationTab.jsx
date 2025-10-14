@@ -155,7 +155,7 @@ export default function EducationTab({ educationData }) {
                     trendLabel="10yr"
                 />
                 <StatCard
-                    title="Funding vs Adequate"
+                    title="Student Funding Adequacy"
                     value={processedData.currentFunding >= 0 ? 'Adequately funded' : 'Below adequate'}
                     subtitle={`Gap: ${(Math.abs(processedData.currentFunding) / 1000).toFixed(1)}k per pupil`}
                     trend={processedData.fundingChange}
@@ -220,7 +220,7 @@ export default function EducationTab({ educationData }) {
                         School Enrollment Breakdown
                     </h2>
                     <p className="text-sm text-gray-600 mb-4">
-                        Public vs private school enrollment—currently {processedData.privateShare.toFixed(0)}% private
+                        Public vs private school enrollment—currently {processedData.privateShare.toFixed(0)}% of enrolled students go to private school
                     </p>
 
                     <ResponsiveContainer width="100%" height={250}>
@@ -250,9 +250,13 @@ export default function EducationTab({ educationData }) {
                     <ResponsiveContainer width="100%" height={250}>
                         <AreaChart data={processedData.fundingTrend}>
                             <defs>
-                                <linearGradient id="fundLocal" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#f97316" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#f97316" stopOpacity={0.1}/>
+                                <linearGradient id="fundLocalPositive" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#16a34a" stopOpacity={0.1}/>
+                                </linearGradient>
+                                <linearGradient id="fundLocalNegative" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
                                 </linearGradient>
                                 <linearGradient id="fundUS" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
@@ -272,7 +276,12 @@ export default function EducationTab({ educationData }) {
                             <Legend 
                                 formatter={(value) => value === 'local' ? processedData.locationName : 'United States'}
                             />
-                            <Area type="monotone" dataKey="local" stroke="#f97316" fill="url(#fundLocal)" />
+                            <Area 
+                                type="monotone" 
+                                dataKey="local" 
+                                stroke={processedData.currentFunding >= 0 ? "#16a34a" : "#dc2626"}
+                                fill={processedData.currentFunding >= 0 ? "url(#fundLocalPositive)" : "url(#fundLocalNegative)"}
+                            />
                             <Area type="monotone" dataKey="us" stroke="#94a3b8" fill="url(#fundUS)" />
                         </AreaChart>
                     </ResponsiveContainer>

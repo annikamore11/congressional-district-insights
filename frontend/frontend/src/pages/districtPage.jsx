@@ -49,6 +49,8 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
     const [demographicsCountyResults, setDemographicsCountyResults] = useState([]);
     const [educationStateResults, setEducationStateResults] = useState([]);
     const [educationCountyResults, setEducationCountyResults] = useState([]);
+    const [economyStateResults, setEconomyStateResults] = useState([]);
+    const [economyCountyResults, setEconomyCountyResults] = useState([]);
     const [members, setMembers] = useState([]);
     const [county, setCounty] = useState(null);
     const [stateChartData, setStateChartData] = useState([]);
@@ -66,6 +68,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
     const currentHealthData = activeTab === "state" ? healthStateResults : healthCountyResults;
     const currentDemographicsData = activeTab === "state" ? demograpicsStateResults : demographicsCountyResults;
     const currentEducationData = activeTab === "state" ? educationStateResults : educationCountyResults;
+    const currentEconomyData = activeTab === "state" ? economyStateResults : economyCountyResults;
 
     useEffect(() => {
         async function fetchUserReps() {
@@ -204,6 +207,35 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
         }
     }, [state_name, county, activeTab]);
 
+    // Fetch census data for economy tab
+    useEffect(() => {
+        async function fetchEconomyData() {
+            try {
+                let resp;
+                if (activeTab === "state") {
+                    resp = await fetch(`${API_BASE}/api/economy/state/${state_full}/${state_name}`);
+                } else {
+                    resp = await fetch(`${API_BASE}/api/economy/county/${state_name}/${county}`);
+                }
+                
+                const data = await resp.json();
+                if (data.results) {
+                    if (activeTab === "state") {
+                        setEconomyStateResults(data.results);
+                    } else {
+                        setEconomyCountyResults(data.results);
+                    }
+                }
+            } catch (err) {
+                console.error("Failed to fetch economy data results:", err);
+            }
+        }
+
+        if (state_name && (activeTab === "state" || (activeTab === "county" && county))) {
+            fetchEconomyData();
+        }
+    }, [state_name, county, activeTab]);
+
     return (
         <div className="flex h-full relative">
             {/* Mobile Menu Button */}
@@ -325,7 +357,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                         {/* Tab Content */}
                         {activeSubTab === "civics" && <CivicsTab chartData={currentChartData} />}
                         {activeSubTab === "demographics" && <DemographicsTab demographicsData={currentDemographicsData} />}
-                        {activeSubTab === "economy" && <EconomyTab />}
+                        {activeSubTab === "economy" && <EconomyTab  economyData={currentEconomyData} />}
                         {activeSubTab === "health" && <HealthTab healthData={currentHealthData} />}
                         {activeSubTab === "education" && <EducationTab educationData={currentEducationData}/>}
                     </div>

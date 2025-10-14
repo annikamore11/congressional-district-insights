@@ -8,7 +8,8 @@ from database.queries import (
     aggregate_state_results, fetch_county_results, 
     fetch_health_state, fetch_health_county, 
     fetch_demographics_state, fetch_demographics_county,
-    fetch_education_state, fetch_education_county
+    fetch_education_state, fetch_education_county,
+    fetch_economy_state, fetch_economy_county
     )
 
 # Load environment variables from .env
@@ -406,6 +407,24 @@ def get_education_state_results(state_full, state_name):
 @app.route("/api/education/county/<state_name>/<county>")
 def get_education_county_results(state_name, county):
     results = fetch_education_county(state_name, county)
+    return jsonify({
+        "state": state_name,
+        "county": county,
+        "results": results
+    })
+
+# Retrieve Economy Data 
+@app.route("/api/economy/state/<state_full>/<state_name>")
+def get_economy_state_results(state_full, state_name):
+    results = fetch_economy_state(state_full, state_name)
+    return jsonify({
+        "state": state_name,
+        "results": results
+    })
+
+@app.route("/api/economy/county/<state_name>/<county>")
+def get_economy_county_results(state_name, county):
+    results = fetch_economy_county(state_name, county)
     return jsonify({
         "state": state_name,
         "county": county,
