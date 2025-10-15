@@ -79,8 +79,8 @@ export default function App() {
         setRegionCode(newRegionCode);
         
         // If already on district page, navigate again to trigger refresh
-        if (location.pathname === '/district-overview') {
-          navigate("/district-overview", {
+        if (location.pathname === '/') {
+          navigate("/home", {
             state: { 
               regionCode: newRegionCode, 
               region: newRegion, 
@@ -139,12 +139,12 @@ export default function App() {
   return (
     <div className="h-screen w-screen flex flex-col">
       {/* Header */}
-      <header className="flex items-center p-4 bg-gray-800 shadow z-10 justify-between">
+      <header className="flex items-center p-4 bg-gray-800 shadow z-50 justify-between">
         {/* Logo on the left */}
         <div className="flex-shrink-0">
           <p
             className="text-s font-semibold text-white cursor-pointer"
-            onClick={() => navigate("/")}
+            onClick={() => navigate("/home")}
           >
             eGutenbergPress
           </p>
@@ -157,7 +157,7 @@ export default function App() {
             <button className="px-3 py-2 transparent-btn font-bold rounded">
               Issues
             </button>
-            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-20 p-4">
+            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 p-4">
               <ul className="grid grid-cols-5 gap-2">
                 {issueCategories.map((issue, idx) => (
                   <li
@@ -176,7 +176,7 @@ export default function App() {
             <button className="px-3 py-2 font-bold transparent-btn rounded">
               Organizations
             </button>
-            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-20 p-4">
+            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 p-4">
               <ul className="grid grid-cols-3 gap-2">
                 {organizations.map((org, idx) => (
                   <li
@@ -194,7 +194,7 @@ export default function App() {
           <button 
             className="px-3 py-2 transparent-btn font-bold rounded flex items-center gap-1"
             onClick={() =>
-              navigate("/district-overview", {
+              navigate("/", {
                 state: { regionCode, region, lat, long },
               })
             }
@@ -236,7 +236,7 @@ export default function App() {
           <button 
             className="md:hidden flex items-center transparent-btn px-2 py-1.5 rounded"
             onClick={() =>
-              navigate("/district-overview", {
+              navigate("/", {
                 state: { regionCode, region, lat, long },
               })
             }
@@ -249,8 +249,8 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto text-gray-600">
         <Routes>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/district-overview" element={<DistrictOverview />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/" element={<DistrictOverview />} />
         </Routes>
       </main>
     </div>

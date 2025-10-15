@@ -123,7 +123,7 @@ function CollapsibleSources() {
                         </a>
                     </p>
                     <p className="text-[10px] text-gray-500 mt-2 italic">
-                        All measures from the Census ACS data represent 5-year rolling averages
+                        All measures from the Census ACS represent 5-year rolling averages
                     </p>
                 </div>
             )}
@@ -411,7 +411,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                             onClick={() => setActiveTab("state")}
                             className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                                 activeTab === "state"
-                                    ? "border-purple-500 text-purple-600"
+                                    ? "border-orange-500 text-orange-600"
                                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                             }`}
                         >
@@ -421,7 +421,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                             onClick={() => setActiveTab("county")}
                             className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
                                 activeTab === "county"
-                                    ? "border-purple-500 text-purple-600"
+                                    ? "border-orange-500 text-orange-600"
                                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                             }`}
                         >

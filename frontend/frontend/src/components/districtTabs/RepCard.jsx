@@ -8,13 +8,13 @@ export default function RepCard({ member, isHighlighted }) {
     };
     
     const partyBgColors = {
-        Democrat: "bg-blue-50",
-        Republican: "bg-red-50",
+        Democrat: "bg-blue-200",
+        Republican: "bg-red-200",
         Independent: "bg-gray-50"
     };
     
     const highlightStyle = isHighlighted 
-        ? "ring-2 ring-purple-400 shadow-md" 
+        ? "ring-2 ring-gray-400 shadow-md" 
         : "opacity-60";
     
     const borderColor = partyColors[member.party] || "border-gray-300";
@@ -27,7 +27,7 @@ export default function RepCard({ member, isHighlighted }) {
                     <img 
                         src={member.photo_url} 
                         alt={member.name}
-                        className="w-12 h-12 rounded-full flex-shrink-0 object-cover border-2 border-white"
+                        className="w-12 h-12 rounded-full flex-shrink-0 object-cover border-2 border-black"
                         onError={(e) => {
                             e.target.style.display = 'none';
                         }}
