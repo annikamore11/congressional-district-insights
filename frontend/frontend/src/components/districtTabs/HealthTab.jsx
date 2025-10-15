@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import StatCarousel from "./StatCarousel";
 
 export default function HealthTab({ healthData }) {
     const processedData = useMemo(() => {
@@ -17,13 +18,25 @@ export default function HealthTab({ healthData }) {
         const sortedLocal = localData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
         const sortedUS = usData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
-        // Filter data to only include years up to 2021 for premature death
-        const localUpTo2021 = sortedLocal.filter(row => parseInt(row.year) <= 2021);
-        const usUpTo2021 = sortedUS.filter(row => parseInt(row.year) <= 2021);
+        // Get latest year with non-null premature_death for both datasets since latest year is 1 yr behind the census data
+        const getLatestValidYear = (data) => {
+        const validYears = data
+            .filter(row => row.premature_death != null && row.premature_death !== '')
+            .map(row => parseInt(row.year));
+        return Math.max(...validYears);
+        };
+
+        const latestYear = Math.min(
+        getLatestValidYear(sortedLocal),
+        getLatestValidYear(sortedUS)
+        );
+
+        const localLatest = sortedLocal.filter(row => parseInt(row.year) <= latestYear);
+        const usLatest = sortedUS.filter(row => parseInt(row.year) <= latestYear);
 
         // Premature death trend (last 10 years, up to 2021)
-        const prematureDeathTrend = localUpTo2021.slice(-10).map(local => {
-            const usMatch = usUpTo2021.find(us => us.year === local.year);
+        const prematureDeathTrend = localLatest.slice(-10).map(local => {
+            const usMatch = usLatest.find(us => us.year === local.year);
             return {
                 year: local.year,
                 local: parseFloat(local.premature_death) || null,
@@ -161,11 +174,13 @@ export default function HealthTab({ healthData }) {
             </div>
 
             {/* Healthcare Access */}
-            <div>
-                <h2 className="text-lg font-semibold mb-3 text-gray-800">Healthcare Access</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800">
+                    Healthcare Access
+                </h2>
+                <StatCarousel>
                     <HealthStatCard
-                        title="Uninsured Adults"
+                        title="Uninsured"
                         value={processedData.uninsured?.value}
                         unit="%"
                         change={processedData.uninsured?.change}
@@ -194,7 +209,7 @@ export default function HealthTab({ healthData }) {
                         decimals={0}
                         formatAsRatio={true}
                     />
-                </div>
+                </StatCarousel>
             </div>
 
             {/* Preventive Care & Risk Factors Row */}

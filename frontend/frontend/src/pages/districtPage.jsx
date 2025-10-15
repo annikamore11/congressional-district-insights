@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Info, ChevronDown, ChevronUp } from "lucide-react";
 import CivicsTab from "../components/districtTabs/CivicsTab";
 import DemographicsTab from "../components/districtTabs/DemographicsTab";
 import EconomyTab from "../components/districtTabs/EconomyTab";
@@ -33,6 +33,102 @@ function processElectionData(rawResults, setChartFn) {
     });
     
     setChartFn(chartData);
+}
+
+// Collapsible sources component
+function CollapsibleSources() {
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    return (
+        <div className="mt-6 border-t border-gray-200 pt-4">
+            <button 
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 w-full"
+            >
+                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+                <span>Data sources & methodology</span>
+            </button>
+            
+            {isExpanded && (
+                <div className="mt-3 text-xs text-gray-600 space-y-2 pl-6">
+                    <p>
+                        • <strong>Civics:</strong> MIT Election Data and Science Lab, "County Presidential Election Returns 2000-2024" 
+                        <a 
+                            href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>
+                    </p>
+                    <p>
+                        • <strong>Demographics:</strong> U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) 
+                        <a 
+                            href="https://www.census.gov/programs-surveys/acs.html" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>
+                    </p>
+                    <p>
+                        • <strong>Economy:</strong> U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) 
+                        <a 
+                            href="https://www.census.gov/programs-surveys/acs.html" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>
+                    </p>
+                    <p>
+                        • <strong>Health:</strong> County Health Rankings & Roadmaps (2013-2022) 
+                        <a 
+                            href="https://www.countyhealthrankings.org/health-data/methodology-and-sources/data-documentation" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>, U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) [Uninsured measure]
+                        <a 
+                            href="https://www.census.gov/programs-surveys/acs.html" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>
+                    </p>
+                    <p>
+                        • <strong>Education:</strong> U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) 
+                        <a 
+                            href="https://www.census.gov/programs-surveys/acs.html" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>, County Health Rankings & Roadmaps (2013-2022) [School Funding measure]
+                        <a 
+                            href="https://www.countyhealthrankings.org/health-data/methodology-and-sources/data-documentation" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>
+                    </p>
+                    <p className="text-[10px] text-gray-500 mt-2 italic">
+                        All measures from the Census ACS data represent 5-year rolling averages
+                    </p>
+                </div>
+            )}
+        </div>
+    );
 }
 
 export default function DistrictContent({ state_name, state_full, lat, long }) {
@@ -337,8 +433,8 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto bg-gray-50">
                     <div className="max-w-6xl mx-auto p-4 sm:p-6">
-                        {/* Sub-tabs */}
-                        <div className="flex flex-wrap sm:flex-nowrap gap-1 mb-6 bg-gray-200 rounded-lg p-1">
+                        {/* Sub-tabs with info icon */}
+                        <div className="flex flex-wrap sm:flex-nowrap gap-1 mb-6 bg-gray-200 rounded-lg p-1 relative">
                             {["civics", "demographics", "economy", "health", "education"].map((tab) => (
                                 <button
                                     key={tab}
@@ -352,6 +448,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                                     {tab}
                                 </button>
                             ))}
+                            
                         </div>
 
                         {/* Tab Content */}
@@ -360,6 +457,9 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                         {activeSubTab === "economy" && <EconomyTab  economyData={currentEconomyData} />}
                         {activeSubTab === "health" && <HealthTab healthData={currentHealthData} />}
                         {activeSubTab === "education" && <EducationTab educationData={currentEducationData}/>}
+
+                        {/* Collapsible sources at bottom */}
+                        <CollapsibleSources />
                     </div>
                 </div>
             </div>

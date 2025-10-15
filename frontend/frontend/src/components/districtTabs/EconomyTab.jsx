@@ -20,11 +20,12 @@ export default function EconomyTab({ economyData }) {
 
         // Get latest and previous year data
         const latestLocal = sortedLocal[sortedLocal.length - 1];
-        const previousLocal = sortedLocal[sortedLocal.length - 2];
         const latestUS = sortedUS[sortedUS.length - 1];
+        const oneYearAgo = sortedLocal[sortedLocal.length - 2];
+        const tenYearsAgo = sortedLocal[sortedLocal.length - 11];
 
         // Income trend (last 10 years)
-        const incomeTrend = sortedLocal.slice(-10).map(local => {
+        const incomeTrend = sortedLocal.slice(-11).map(local => {
             const usMatch = sortedUS.find(us => us.year === local.year);
             return {
                 year: local.year,
@@ -34,7 +35,7 @@ export default function EconomyTab({ economyData }) {
         });
 
         // Unemployment trend
-        const unemploymentTrend = sortedLocal.slice(-10).map(local => {
+        const unemploymentTrend = sortedLocal.slice(-11).map(local => {
             const usMatch = sortedUS.find(us => us.year === local.year);
             return {
                 year: local.year,
@@ -43,8 +44,7 @@ export default function EconomyTab({ economyData }) {
             };
         });
 
-
-        // Calculate changes
+        // Calculate changes (returns percentage change)
         const getChange = (latest, previous, field) => {
             if (!latest || !previous || !latest[field] || !previous[field]) return null;
             const latestVal = parseFloat(latest[field]);
@@ -52,67 +52,84 @@ export default function EconomyTab({ economyData }) {
             return ((latestVal - prevVal) / prevVal) * 100;
         };
 
+        // 1yr and 10yr changes
+        const medIncome1yr = getChange(latestLocal, oneYearAgo, 'med_household_income');
+        const medIncome10Yr = getChange(latestLocal, tenYearsAgo, 'med_household_income');
+        
+        const poverty1yr = getChange(latestLocal, oneYearAgo, 'poverty_pop');
+        const poverty10Yr = getChange(latestLocal, tenYearsAgo, 'poverty_pop');
+
+        const unemployment1yr = getChange(latestLocal, oneYearAgo, 'unemployment_rate');
+        const unemployment10yr = getChange(latestLocal, tenYearsAgo, 'unemployment_rate');
+
+        const laborForce1yr = getChange(latestLocal, oneYearAgo, 'labor_force_rate');
+        const laborForce10yr = getChange(latestLocal, tenYearsAgo, 'labor_force_rate');
+
         // Current stats
         const medianIncome = {
             value: parseFloat(latestLocal?.med_household_income) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'med_household_income'),
+            trend1yr: medIncome1yr,
+            trend10yr: medIncome10Yr,
             usValue: parseFloat(latestUS?.med_household_income) || null
         };
 
         const povertyRate = {
             value: parseFloat(latestLocal?.poverty_pop) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'poverty_pop'),
+            trend1yr: poverty1yr,
+            trend10yr: poverty10Yr,
             usValue: parseFloat(latestUS?.poverty_pop) || null
         };
 
         const unemploymentRate = {
             value: parseFloat(latestLocal?.unemployment_rate) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'unemployment_rate'),
+            trend1yr: unemployment1yr,
+            trend10yr: unemployment10yr,
             usValue: parseFloat(latestUS?.unemployment_rate) || null
         };
 
         const laborForce = {
             value: parseFloat(latestLocal?.labor_force_rate) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'labor_force_rate'),
+            trend1yr: laborForce1yr,
+            trend10yr: laborForce10yr,
             usValue: parseFloat(latestUS?.labor_force_rate) || null
         };
 
         const medianRent = {
             value: parseFloat(latestLocal?.med_gross_rent) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'med_gross_rent'),
+            trend1yr: getChange(latestLocal, oneYearAgo, 'med_gross_rent'),
             usValue: parseFloat(latestUS?.med_gross_rent) || null
         };
 
         const medianHomeValue = {
             value: parseFloat(latestLocal?.med_home_value) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'med_home_value'),
+            trend1yr: getChange(latestLocal, oneYearAgo, 'med_home_value'),
             usValue: parseFloat(latestUS?.med_home_value) || null
         };
 
         const giniIndex = {
             value: parseFloat(latestLocal?.gini_index) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'gini_index'),
+            trend1yr: getChange(latestLocal, oneYearAgo, 'gini_index'),
             usValue: parseFloat(latestUS?.gini_index) || null
         };
 
         const rentersCostBurdened = {
             value: parseFloat(latestLocal?.pct_renters_cost_burdened) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'pct_renters_cost_burdened'),
+            trend1yr: getChange(latestLocal, oneYearAgo, 'pct_renters_cost_burdened'),
             usValue: parseFloat(latestUS?.pct_renters_cost_burdened) || null
         };
 
         const homeownersCostBurdened = {
             value: parseFloat(latestLocal?.pct_homeowners_cost_burdened) || null,
             year: latestLocal?.year,
-            change: getChange(latestLocal, previousLocal, 'pct_homeowners_cost_burdened'),
+            trend1yr: getChange(latestLocal, oneYearAgo, 'pct_homeowners_cost_burdened'),
             usValue: parseFloat(latestUS?.pct_homeowners_cost_burdened) || null
         };
 
@@ -167,31 +184,31 @@ export default function EconomyTab({ economyData }) {
                     title="Median Household Income"
                     value={`$${(processedData.medianIncome.value / 1000).toFixed(0)}k`}
                     subtitle={`US avg: $${(processedData.medianIncome.usValue / 1000).toFixed(0)}k`}
-                    trend={processedData.medianIncome.change}
-                    trendLabel="vs prior year"
-                />
-                <StatCard
-                    title="Unemployment Rate"
-                    value={`${processedData.unemploymentRate.value?.toFixed(1)}%`}
-                    subtitle={`US avg: ${processedData.unemploymentRate.usValue?.toFixed(1)}%`}
-                    trend={processedData.unemploymentRate.change}
-                    trendLabel="vs prior year"
-                    inverse={true}
+                    trend1Yr={processedData.medianIncome.trend1yr}
+                    trend10Yr={processedData.medianIncome.trend10yr}
                 />
                 <StatCard
                     title="Poverty Rate"
                     value={`${processedData.povertyRate.value?.toFixed(1)}%`}
                     subtitle={`US avg: ${processedData.povertyRate.usValue?.toFixed(1)}%`}
-                    trend={processedData.povertyRate.change}
-                    trendLabel="vs prior year"
+                    trend1Yr={processedData.povertyRate.trend1yr}
+                    trend10Yr={processedData.povertyRate.trend10yr}
                     inverse={true}
                 />
                 <StatCard
                     title="Labor Force Participation"
                     value={`${processedData.laborForce.value?.toFixed(1)}%`}
                     subtitle={`US avg: ${processedData.laborForce.usValue?.toFixed(1)}%`}
-                    trend={processedData.laborForce.change}
-                    trendLabel="vs prior year"
+                    trend1Yr={processedData.laborForce.trend1yr}
+                    trend10Yr={processedData.laborForce.trend10yr}
+                />
+                <StatCard
+                    title="Unemployment Rate"
+                    value={`${processedData.unemploymentRate.value?.toFixed(1)}%`}
+                    subtitle={`US avg: ${processedData.unemploymentRate.usValue?.toFixed(1)}%`}
+                    trend1Yr={processedData.unemploymentRate.trend1yr}
+                    trend10Yr={processedData.unemploymentRate.trend10yr}
+                    inverse={true}
                 />
             </StatCarousel>
 
@@ -199,7 +216,7 @@ export default function EconomyTab({ economyData }) {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
-                        Median Household Income
+                        Median Household Income (Not Inflation Adjusted)
                     </h2>
                     <p className="text-sm text-gray-600 mb-4">
                         Track income growth over time compared to national average
@@ -218,7 +235,12 @@ export default function EconomyTab({ economyData }) {
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                            <XAxis 
+                                dataKey="year" 
+                                tick={{ fill: '#6b7280', fontSize: 11 }}
+                                interval="preserveStartEnd"  // Add this to show first and last labels
+                                minTickGap={20}  // Add this to prevent label overlap
+                            />
                             <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
                             <Tooltip 
                                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
@@ -247,7 +269,12 @@ export default function EconomyTab({ economyData }) {
                     <ResponsiveContainer width="100%" height={250}>
                         <LineChart data={processedData.unemploymentTrend}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                            <XAxis 
+                                dataKey="year" 
+                                tick={{ fill: '#6b7280', fontSize: 11 }}
+                                interval="preserveStartEnd"  // Add this to show first and last labels
+                                minTickGap={20}  // Add this to prevent label overlap
+                            />
                             <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
                             <Tooltip 
                                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
@@ -281,28 +308,23 @@ export default function EconomyTab({ economyData }) {
 
             {/* Housing Affordability */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold mb-1 text-gray-800">
+                <h2 className="text-lg font-semibold mb-4 text-gray-800">
                     Housing Costs
                 </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                    Median rent and home values compared to national averages
-                </p>
 
                 <StatCarousel>
                     <StatCard
                         title="Median Rent"
                         value={`$${(processedData.medianRent.value).toLocaleString()}`}
                         subtitle={`US avg: $${(processedData.medianRent.usValue).toLocaleString()}`}
-                        trend={processedData.medianRent.change}
-                        trendlabel="vs prior year"
+                        trend1Yr={processedData.medianRent.trend1yr}
                         inverse={true}
                     />
                     <StatCard
                         title="Median Home Value"
                         value={`$${(processedData.medianHomeValue.value).toLocaleString()}`}
                         subtitle={`US avg: $${(processedData.medianHomeValue.usValue).toLocaleString()}`}
-                        trend={processedData.medianHomeValue.change}
-                        trendLabel="vs prior year"
+                        trend1Yr={processedData.medianHomeValue.trend1yr}
                     />
                     <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                         <p className="text-sm text-gray-600 mb-1">Renters Cost-Burdened</p>
@@ -330,58 +352,37 @@ export default function EconomyTab({ economyData }) {
                     </div>
                 </StatCarousel>
             </div>
-
-            {/* Policy Implications */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold mb-3 text-gray-800">
-                    Policy Implications
-                </h2>
-                <div className="space-y-3 text-sm text-gray-700">
-                    <PolicyPoint 
-                        icon="💰"
-                        text={`Median income ${processedData.medianIncome.value > processedData.medianIncome.usValue ? 'exceeds' : 'trails'} national average by $${Math.abs(processedData.medianIncome.value - processedData.medianIncome.usValue).toLocaleString()}—${processedData.medianIncome.value < processedData.medianIncome.usValue ? 'advocate for' : 'support'} economic development initiatives`}
-                    />
-                    <PolicyPoint 
-                        icon="📊"
-                        text={`Unemployment at ${processedData.unemploymentRate.value?.toFixed(1)}% ${processedData.unemploymentRate.value < processedData.unemploymentRate.usValue ? 'below' : 'above'} US average—${processedData.unemploymentRate.value > 5 ? 'prioritize' : 'maintain'} job creation and workforce development`}
-                    />
-                    <PolicyPoint 
-                        icon="🏠"
-                        text={`${processedData.rentersCostBurdened.value?.toFixed(1)}% of renters and ${processedData.homeownersCostBurdened.value?.toFixed(1)}% of homeowners are cost-burdened—${Math.max(processedData.rentersCostBurdened.value, processedData.homeownersCostBurdened.value) > 45 ? 'critical need for' : 'support'} affordable housing development and assistance programs`}
-                    />
-                    <PolicyPoint 
-                        icon="📈"
-                        text={`Gini index of ${processedData.giniIndex.value?.toFixed(3)} indicates ${processedData.giniIndex.value > 0.45 ? 'high' : 'moderate'} income inequality—consider policies to promote economic mobility and equity`}
-                    />
-                </div>
-            </div>
         </div>
     );
 }
 
-function StatCard({ title, value, subtitle, trend, trendLabel, inverse = false }) {
-    const getTrendDisplay = () => {
-        if (trend === null || trend === undefined) return null;
-        const isPositive = trend > 0;
-        const isGood = inverse ? !isPositive : isPositive;
-        const color = isGood ? "text-green-600" : "text-red-600";
-        const Icon = isPositive ? TrendingUp : TrendingDown;
+function StatCard({ title, value, subtitle, trend1Yr, trend10Yr, inverse = false }) {
+    const getTrendDisplay = (trend, label) => {
+        if (trend === null || trend === undefined || isNaN(trend)) return null;
         
+        // Determine if trend is good or bad
+        const isPositive = trend > 0;
+        const isGoodTrend = inverse ? !isPositive : isPositive;
+        
+        const color = isGoodTrend ? "text-green-600" : "text-red-600";
+        const Icon = isPositive ? TrendingUp : trend < 0 ? TrendingDown : Minus;
+
         if (Math.abs(trend) < 0.5) {
             return (
-                <div className="flex items-center gap-1 text-xs mt-1">
-                    <Minus size={14} className="text-gray-500" />
-                    <span className="text-gray-500">Stable {trendLabel}</span>
+                <div className="flex items-center gap-1 text-xs">
+                    <Minus size={12} className="text-gray-500" />
+                    <span className="text-gray-500">Stable {label}</span>
                 </div>
             );
         }
         
         return (
-            <div className="flex items-center gap-1 text-xs mt-1">
-                <Icon size={14} className={color} />
+            <div className="flex items-center gap-1">
+                <Icon size={12} className={color} />
                 <span className={color}>
-                    {isPositive ? '+' : ''}{trend.toFixed(1)}% {trendLabel}
+                    {isPositive ? '+' : ''}{Math.abs(trend).toFixed(1)}%
                 </span>
+                <span className="text-gray-400">{label}</span>
             </div>
         );
     };
@@ -389,19 +390,16 @@ function StatCard({ title, value, subtitle, trend, trendLabel, inverse = false }
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-            <p className="text-xs text-gray-500">{subtitle}</p>
-            {getTrendDisplay()}
+            <p className="text-2xl font-bold text-gray-900 mb-2">{value}</p>
+            <p className="text-xs text-gray-500 mb-2">{subtitle}</p>
+
+            {(trend1Yr !== null || trend10Yr !== null) && (
+                <div className="flex gap-5 text-xs">
+                    {trend1Yr !== null && getTrendDisplay(trend1Yr, '1yr')}
+                    {trend10Yr !== null && getTrendDisplay(trend10Yr, '10yr')}
+                </div>
+            )}
         </div>
     );
 }
 
-
-function PolicyPoint({ icon, text }) {
-    return (
-        <div className="flex items-start gap-2 p-2 bg-green-50 rounded">
-            <span className="text-lg flex-shrink-0">{icon}</span>
-            <p className="text-sm">{text}</p>
-        </div>
-    );
-}

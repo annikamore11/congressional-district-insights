@@ -7,7 +7,9 @@ library(stringr)
 # Set working directory to data_processing folder
 setwd(dirname(rstudioapi::getActiveDocumentContext()$path))
 trends_raw <- read.csv("raw_data/chr_trends_csv_2025.csv")
-trends <- trends_raw  %>%
+
+# Clean the data
+trends_clean <- trends_raw %>%
   mutate(
     measurename = case_when(
       measurename == "Premature death" ~ "premature_death",
@@ -25,22 +27,33 @@ trends <- trends_raw  %>%
       measurename == "Alcohol-impaired driving deaths" ~ "alcohol_impaired_driving_deaths",
       measurename == "Flu vaccinations" ~ "flu_vaccinations",
       measurename == "School funding" ~ "school_funding",
-      TRUE ~ NA_character_  # just in case there are other unexpected values
+      TRUE ~ NA_character_
     ),
     yearspan = as.character(yearspan),
     rawvalue = as.numeric(str_replace_all(rawvalue, ",","")),
-    year_numeric = str_extract(yearspan, "[0-9]{4}") %>% as.numeric(),  # start year
-    end_year = str_extract(yearspan, "(?<=-)[0-9]{4}") %>% as.numeric(), # end year if exists
-    year_numeric = ifelse(!is.na(end_year), (year_numeric + end_year)/2, year_numeric)
+    year_numeric = str_extract(yearspan, "[0-9]{4}") %>% as.numeric(),
+    end_year = str_extract(yearspan, "(?<=-)[0-9]{4}") %>% as.numeric(),
+    year_numeric = ifelse(!is.na(end_year), end_year, year_numeric)
   ) %>%
   mutate(across(where(is.character), ~na_if(., "NA"))) %>%
-  mutate(across(where(is.numeric), ~ifelse(is.na(.), NA_real_, .)))
+  mutate(across(where(is.numeric), ~ifelse(is.na(.), NA_real_, .))) %>%
+  filter(!is.na(measurename))  # Remove any unmapped measures
+
+# Convert to wide format
+trends_wide <- trends_clean %>%
+  select(state, county, statecode, countycode, year_numeric, measurename, rawvalue) %>%
+  pivot_wider(
+    names_from = measurename,
+    values_from = rawvalue,
+    values_fn = mean  # In case there are duplicates, take the mean
+  )
 
 
-## After cleaning, i added the table to my supabase database
+# Save wide format
 write_csv(
-  trends,
-  "cleaned_data/chr_trends_clean.csv",
+  trends_wide,
+  "cleaned_data/chr_trends_cleaned.csv",
   na = ""
 )
-
+View(trends_wide)
+print(nrow(trends_wide))

@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
-import { AreaChart, Area, BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import StatCarousel from "./StatCarousel";
 
 export default function EducationTab({ educationData }) {
     const processedData = useMemo(() => {
@@ -17,14 +18,35 @@ export default function EducationTab({ educationData }) {
         const sortedLocal = localData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
         const sortedUS = usData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
+        const getLatestValidYearFunding = (data) => {
+            const validYears = data
+                .filter(row => row.school_funding != null && row.school_funding !== '')
+                .map(row => parseInt(row.year));
+            return Math.max(...validYears);
+        };
+
+        const latestYearFunding = Math.min(
+            getLatestValidYearFunding(sortedLocal),
+            getLatestValidYearFunding(sortedUS)
+        );
+
+        // Arrays for graph
+        const localLatest = sortedLocal.filter(row => parseInt(row.year) <= latestYearFunding);
+        const usLatest = sortedUS.filter(row => parseInt(row.year) <= latestYearFunding);
+
         // Get latest and historical data
         const latestLocal = sortedLocal[sortedLocal.length - 1];
         const latestUS = sortedUS[sortedUS.length - 1];
-        const fiveYearsAgo = sortedLocal[sortedLocal.length - 6];
+        const oneYearAgo = sortedLocal[sortedLocal.length - 2];
         const tenYearsAgo = sortedLocal[sortedLocal.length - 11];
 
+        const latestLocalFunding = localLatest[localLatest.length - 1];
+        const latestUSFunding = usLatest[usLatest.length - 1];
+        const oneYearAgoFunding = localLatest[localLatest.length - 2];
+        const tenYearsAgoFunding = localLatest[localLatest.length - 10];
+
         // Educational attainment trend (last 10 years)
-        const attainmentTrend = sortedLocal.slice(-10).map(local => {
+        const attainmentTrend = sortedLocal.slice(-11).map(local => {
             const usMatch = sortedUS.find(us => us.year === local.year);
             return {
                 year: local.year,
@@ -36,19 +58,9 @@ export default function EducationTab({ educationData }) {
             };
         });
 
-        // Enrollment composition over time
-        const enrollmentTrend = sortedLocal.slice(-10).map(local => {
-            return {
-                year: local.year,
-                public: parseFloat(local.pct_public_school) || 0,
-                private: parseFloat(local.pct_private_school) || 0,
-                total: parseFloat(local.pct_enrolled) || 0
-            };
-        });
-
         // School funding trend
-        const fundingTrend = sortedLocal.slice(-10).map(local => {
-            const usMatch = sortedUS.find(us => us.year === local.year);
+        const fundingTrend = localLatest.slice(-10).map(local => {
+            const usMatch = usLatest.find(us => us.year === local.year);
             return {
                 year: local.year,
                 local: parseFloat(local.school_funding) || 0,
@@ -62,10 +74,18 @@ export default function EducationTab({ educationData }) {
             return parseFloat(latest[field]) - parseFloat(old[field]);
         };
 
-        const hsChange = getChange(latestLocal, tenYearsAgo, 'pct_hs_or_higher');
-        const baChange = getChange(latestLocal, tenYearsAgo, 'pct_ba_or_higher');
-        const enrollmentChange = getChange(latestLocal, tenYearsAgo, 'pct_enrolled');
-        const fundingChange = getChange(latestLocal, fiveYearsAgo, 'school_funding');
+        // 1yr and 10yr changes
+        const hsChange1Yr = getChange(latestLocal, oneYearAgo, 'pct_hs_or_higher');
+        const hsChange10Yr = getChange(latestLocal, tenYearsAgo, 'pct_hs_or_higher');
+        
+        const baChange1Yr = getChange(latestLocal, oneYearAgo, 'pct_ba_or_higher');
+        const baChange10Yr = getChange(latestLocal, tenYearsAgo, 'pct_ba_or_higher');
+        
+        const enrollmentChange1Yr = getChange(latestLocal, oneYearAgo, 'pct_enrolled');
+        const enrollmentChange10Yr = getChange(latestLocal, tenYearsAgo, 'pct_enrolled');
+        
+        const fundingChange1Yr = getChange(latestLocalFunding, oneYearAgoFunding, 'school_funding');
+        const fundingChange10Yr = getChange(latestLocalFunding, tenYearsAgoFunding, 'school_funding');
 
         // Current stats
         const currentHS = parseFloat(latestLocal?.pct_hs_or_higher) || 0;
@@ -74,11 +94,12 @@ export default function EducationTab({ educationData }) {
         const currentEnrollment = parseFloat(latestLocal?.pct_enrolled) || 0;
         const currentPublic = parseFloat(latestLocal?.pct_public_school) || 0;
         const currentPrivate = parseFloat(latestLocal?.pct_private_school) || 0;
-        const currentFunding = parseFloat(latestLocal?.school_funding) || 0;
+        const currentFunding = parseFloat(latestLocalFunding?.school_funding) || 0;
 
         const usHS = parseFloat(latestUS?.pct_hs_or_higher) || 0;
         const usBA = parseFloat(latestUS?.pct_ba_or_higher) || 0;
-        const usFunding = parseFloat(latestUS?.school_funding) || 0;
+        const usEnrollment =  parseFloat(latestUS?.pct_enrolled) || 0;
+        const usFunding = parseFloat(latestUSFunding?.school_funding) || 0;
 
         // Calculate private school share of enrollment
         const privateShare = currentEnrollment > 0 ? (currentPrivate / currentEnrollment) * 100 : 0;
@@ -86,8 +107,8 @@ export default function EducationTab({ educationData }) {
         return {
             locationName,
             latestYear: latestLocal?.year,
+            latestYearFunding: latestLocalFunding?.year,
             attainmentTrend,
-            enrollmentTrend,
             fundingTrend,
             currentHS,
             currentBA,
@@ -98,11 +119,16 @@ export default function EducationTab({ educationData }) {
             currentFunding,
             usHS,
             usBA,
+            usEnrollment,
             usFunding,
-            hsChange,
-            baChange,
-            enrollmentChange,
-            fundingChange,
+            hsChange1Yr,
+            hsChange10Yr,
+            baChange1Yr,
+            baChange10Yr,
+            enrollmentChange1Yr,
+            enrollmentChange10Yr,
+            fundingChange1Yr,
+            fundingChange10Yr,
             privateShare
         };
     }, [educationData]);
@@ -129,41 +155,53 @@ export default function EducationTab({ educationData }) {
         );
     }
 
+
+
     return (
         <div className="space-y-6">
             {/* Key Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <StatCarousel>
                 <StatCard
                     title="High School Grad Rate"
                     value={`${processedData.currentHS.toFixed(1)}%`}
                     subtitle={`US avg: ${processedData.usHS.toFixed(1)}%`}
-                    trend={processedData.hsChange}
-                    trendLabel="10yr"
+                    latest={`Latest: ${processedData.latestYear}`}
+                    trend1Yr={processedData.hsChange1Yr}
+                    trend10Yr={processedData.hsChange10Yr}
+                    source="Census Bureau ACS PUMS 5-Year Estimate"
                 />
                 <StatCard
                     title="Bachelor's Degree+"
                     value={`${processedData.currentBA.toFixed(1)}%`}
                     subtitle={`US avg: ${processedData.usBA.toFixed(1)}%`}
-                    trend={processedData.baChange}
-                    trendLabel="10yr"
+                    latest={`Latest: ${processedData.latestYear}`}
+                    trend1Yr={processedData.baChange1Yr}
+                    trend10Yr={processedData.baChange10Yr}
+                    source="Census Bureau ACS PUMS 5-Year Estimate"
                 />
                 <StatCard
                     title="School Enrollment"
                     value={`${processedData.currentEnrollment.toFixed(1)}%`}
-                    subtitle={`Latest: ${processedData.latestYear}`}
-                    trend={processedData.enrollmentChange}
-                    trendLabel="10yr"
+                    subtitle={`US avg: ${processedData.usEnrollment.toFixed(1)}%`}
+                    latest={`Latest: ${processedData.latestYear}`}
+                    trend1Yr={processedData.enrollmentChange1Yr}
+                    trend10Yr={processedData.enrollmentChange10Yr}
+                    source="Census Bureau ACS PUMS 5-Year Estimate"
                 />
                 <StatCard
                     title="Student Funding Adequacy"
-                    value={processedData.currentFunding >= 0 ? 'Adequately funded' : 'Below adequate'}
-                    subtitle={`Gap: ${(Math.abs(processedData.currentFunding) / 1000).toFixed(1)}k per pupil`}
-                    trend={processedData.fundingChange}
-                    trendLabel="5yr"
+                    value={processedData.currentFunding >= 0 ? 'Adequate' : 'Below adequate'}
+                    subtitle={`Gap: $${(Math.abs(processedData.currentFunding) / 1000).toFixed(1)}k per pupil`}
+                    latest={`Latest: ${processedData.latestYearFunding}`}
+                    trend1Yr={processedData.fundingChange1Yr}
+                    trend10Yr={processedData.fundingChange10Yr}
                     isFunding={true}
                     fundingValue={processedData.currentFunding}
+                    source="County Health Rankings"
                 />
-            </div>
+            </StatCarousel>
+
+            {/* Get rid of the gap and add latest year to all cards and add source}
 
             {/* Educational Attainment Progress */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -220,23 +258,34 @@ export default function EducationTab({ educationData }) {
                         School Enrollment Breakdown
                     </h2>
                     <p className="text-sm text-gray-600 mb-4">
-                        Public vs private school enrollment—currently {processedData.privateShare.toFixed(0)}% of enrolled students go to private school
+                        {processedData.privateShare.toFixed(1)}% of enrolled students attend private schools
                     </p>
 
-                    <ResponsiveContainer width="100%" height={250}>
-                        <BarChart data={processedData.enrollmentTrend}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                            <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
-                                formatter={(value) => `${value.toFixed(1)}%`}
-                            />
-                            <Legend />
-                            <Bar dataKey="public" stackId="enrollment" fill="#3b82f6" name="Public School" />
-                            <Bar dataKey="private" stackId="enrollment" fill="#ec4899" name="Private School" />
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <div className="flex items-center justify-center gap-8">
+                        <div className="text-center">
+                            <div className="text-4xl font-bold text-blue-600">
+                                {processedData.currentPublic.toFixed(1)}%
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">Public School</div>
+                        </div>
+                        <div className="text-center">
+                            <div className="text-4xl font-bold text-pink-600">
+                                {processedData.currentPrivate.toFixed(1)}%
+                            </div>
+                            <div className="text-sm text-gray-600 mt-1">Private School</div>
+                        </div>
+                    </div>
+
+                    <div className="mt-6 h-3 bg-gray-200 rounded-full overflow-hidden flex">
+                        <div 
+                            className="bg-blue-600" 
+                            style={{ width: `${(processedData.currentPublic / processedData.currentEnrollment) * 100}%` }}
+                        />
+                        <div 
+                            className="bg-pink-600" 
+                            style={{ width: `${(processedData.currentPrivate / processedData.currentEnrollment) * 100}%` }}
+                        />
+                    </div>
                 </div>
 
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
@@ -287,48 +336,42 @@ export default function EducationTab({ educationData }) {
                     </ResponsiveContainer>
                 </div>
             </div>
-
-            {/* Policy Implications */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold mb-3 text-gray-800">
-                    Policy Implications
-                </h2>
-                <div className="space-y-3 text-sm text-gray-700">
-                    <PolicyPoint 
-                        icon="📚"
-                        text={`${processedData.currentHS.toFixed(1)}% high school graduation rate ${processedData.currentHS >= processedData.usHS ? 'exceeds' : 'trails'} national average—${processedData.currentHS >= processedData.usHS ? 'maintain' : 'improve'} dropout prevention programs`}
-                    />
-                    <PolicyPoint 
-                        icon="🎓"
-                        text={`Bachelor's degree attainment at ${processedData.currentBA.toFixed(1)}% suggests need for ${processedData.currentBA < processedData.usBA ? 'increased' : 'continued'} college access and affordability initiatives`}
-                    />
-                    <PolicyPoint 
-                        icon="🏫"
-                        text={`${processedData.privateShare.toFixed(0)}% of enrolled students attend private schools—monitor school choice policies and public school competitiveness`}
-                    />
-                    <PolicyPoint 
-                        icon="💰"
-                        text={`Funding gap of ${Math.abs(processedData.currentFunding).toLocaleString()} per pupil ${processedData.currentFunding >= 0 ? 'exceeds' : 'falls short of'} adequate levels—${processedData.currentFunding >= 0 ? 'maintain' : 'advocate for increased'} investment in education`}
-                    />
-                </div>
-            </div>
         </div>
     );
 }
 
-function StatCard({ title, value, subtitle, trend, trendLabel, isFunding, fundingValue }) {
-    const getTrendDisplay = () => {
+function StatCard({ title, value, subtitle, latest, trend1Yr, trend10Yr, isFunding, fundingValue, source }) {
+    const getTrendDisplay = (trend, label) => {
         if (trend === null || trend === undefined) return null;
         const isPositive = trend > 0;
         const color = isPositive ? "text-green-600" : trend < 0 ? "text-red-600" : "text-gray-500";
         const Icon = isPositive ? TrendingUp : trend < 0 ? TrendingDown : Minus;
+
+        // Format the trend value
+        const formattedTrend = isFunding && Math.abs(trend) > 1000 
+            ? `$${(Math.abs(trend)/1000).toFixed(1)}k`
+            : isFunding 
+                ? `$${Math.abs(trend).toFixed(0)}`
+                : Math.abs(trend) > 1000 
+                    ? `${(trend/1000).toFixed(1)}k` 
+                    : `${trend.toFixed(1)}%`;
+
+        if (Math.abs(trend) < 0.5) {
+            return (
+                <div className="flex items-center gap-1 text-xs">
+                    <Minus size={12} className="text-gray-500" />
+                    <span className="text-gray-500">Stable {label}</span>
+                </div>
+            );
+        }
         
         return (
-            <div className="flex items-center gap-1 text-xs mt-1">
-                <Icon size={14} className={color} />
+            <div className="flex items-center gap-1">
+                <Icon size={12} className={color} />
                 <span className={color}>
-                    {isPositive ? '+' : ''}{Math.abs(trend) > 1000 ? `${(trend/1000).toFixed(1)}k` : trend.toFixed(1)} {trendLabel}
+                    {isPositive ? '+' : ''}{formattedTrend}
                 </span>
+                <span className="text-gray-400">{label}</span>
             </div>
         );
     };
@@ -340,18 +383,17 @@ function StatCard({ title, value, subtitle, trend, trendLabel, isFunding, fundin
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
             <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-            <p className={`text-2xl font-bold ${valueColor}`}>{value}</p>
-            <p className="text-xs text-gray-500">{subtitle}</p>
-            {getTrendDisplay()}
-        </div>
-    );
-}
+            <p className={`text-2xl mb-2 font-bold ${valueColor}`}>{value}</p>
+            <p className="text-xs text-gray-500 mb-1">{subtitle}</p>
+            <p className="text-xs text-gray-500 mb-2">{latest}</p>
+            
+            {(trend1Yr !== null || trend10Yr !== null) && (
+                <div className="flex gap-5 text-xs">
+                    {trend1Yr !== null && getTrendDisplay(trend1Yr, '1yr')}
+                    {trend10Yr !== null && getTrendDisplay(trend10Yr, '10yr')}
+                </div>
+            )}
 
-function PolicyPoint({ icon, text }) {
-    return (
-        <div className="flex items-start gap-2 p-2 bg-blue-50 rounded">
-            <span className="text-lg flex-shrink-0">{icon}</span>
-            <p className="text-sm">{text}</p>
         </div>
     );
 }

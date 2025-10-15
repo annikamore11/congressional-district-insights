@@ -1,6 +1,7 @@
 import React, { useMemo } from "react";
 import { AreaChart, Area, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
+import StatCarousel from "./StatCarousel";
 
 export default function DemographicsTab({ demographicsData }) {
     const processedData = useMemo(() => {
@@ -17,33 +18,26 @@ export default function DemographicsTab({ demographicsData }) {
         const sortedLocal = localData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
         const sortedUS = usData.sort((a, b) => parseInt(a.year) - parseInt(b.year));
 
-        // Process racial diversity trends over time (last 10 years)
-        const diversityTrend = sortedLocal.slice(-10).map(local => {
-            const usMatch = sortedUS.find(us => us.year === local.year);
-            return {
-                year: local.year,
-                localWhite: parseFloat(local.pct_white) || 0,
-                localBlack: parseFloat(local.pct_black) || 0,
-                localAsian: parseFloat(local.pct_asian) || 0,
-                localHispanic: parseFloat(local.pct_hispanic) || 0,
-                localTwoOrMore: parseFloat(local.pct_two_or_more) || 0,
-                usWhite: parseFloat(usMatch?.pct_white) || 0,
-                usBlack: parseFloat(usMatch?.pct_black) || 0,
-                usAsian: parseFloat(usMatch?.pct_asian) || 0,
-                usHispanic: parseFloat(usMatch?.pct_hispanic) || 0,
-                usTwoOrMore: parseFloat(usMatch?.pct_two_or_more) || 0
-            };
-        });
 
         // Current year comparison
         const latestLocal = sortedLocal[sortedLocal.length - 1];
         const latestUS = sortedUS[sortedUS.length - 1];
         const oldestInTrend = sortedLocal[Math.max(0, sortedLocal.length - 11)];
 
+        
         // Calculate changes over last 10 years
         const getChange = (latest, oldest, field) => {
             if (!oldest) return null;
             return parseFloat(latest[field]) - parseFloat(oldest[field]);
+        };
+
+
+        // Helper function to sum "Other" categories
+        const sumOtherCategories = (data) => {
+            return (parseFloat(data?.pct_two_or_more) || 0) + 
+                   (parseFloat(data?.pct_am_indian) || 0) +
+                   (parseFloat(data?.pct_pacificI) || 0) +
+                   (parseFloat(data?.pct_other) || 0);
         };
 
         const raceComparison = [
@@ -72,15 +66,15 @@ export default function DemographicsTab({ demographicsData }) {
                 change: getChange(latestLocal, oldestInTrend, 'pct_hispanic')
             },
             { 
-                category: 'Two or More', 
-                local: parseFloat(latestLocal?.pct_two_or_more) || 0,
-                us: parseFloat(latestUS?.pct_two_or_more) || 0,
-                change: getChange(latestLocal, oldestInTrend, 'pct_two_or_more')
+                category: 'Other', 
+                local: sumOtherCategories(latestLocal),
+                us: sumOtherCategories(latestUS),
+                change: sumOtherCategories(latestLocal) - sumOtherCategories(oldestInTrend)
             }
         ];
 
         // Divorce rate trend
-        const divorceTrend = sortedLocal.slice(-10).map(local => {
+        const divorceTrend = sortedLocal.slice(-11).map(local => {
             const usMatch = sortedUS.find(us => us.year === local.year);
             return {
                 year: local.year,
@@ -96,21 +90,25 @@ export default function DemographicsTab({ demographicsData }) {
         const pctMale = parseFloat(latestLocal?.pct_male) || 0;
         const pctDivorced = parseFloat(latestLocal?.pct_divorced) * 100 || 0;
 
-        // Calculate population growth
-        const fiveYearsAgo = sortedLocal[sortedLocal.length - 6];
-        const popGrowth = fiveYearsAgo ? 
-            ((totalPop - parseInt(fiveYearsAgo.total_pop)) / parseInt(fiveYearsAgo.total_pop)) * 100 : null;
-
-        // Calculate diversity index change (higher = more diverse)
+        // Calculate diversity index using Simpson's Diversity Index (0-100, higher = more diverse)
         const calcDiversityIndex = (data) => {
             const groups = [
                 parseFloat(data.pct_white) || 0,
                 parseFloat(data.pct_black) || 0,
                 parseFloat(data.pct_asian) || 0,
                 parseFloat(data.pct_hispanic) || 0,
-                parseFloat(data.pct_two_or_more) || 0
+                parseFloat(data.pct_two_or_more) || 0,
+                parseFloat(data.pct_am_indian) || 0,
+                parseFloat(data.pct_pacificI) || 0,
+                parseFloat(data.pct_other) || 0
             ];
-            return 100 - Math.max(...groups); // Higher when no single group dominates
+            
+            // Convert percentages to proportions and calculate Simpson's Index
+            const proportions = groups.map(g => g / 100);
+            const simpson = proportions.reduce((sum, p) => sum + (p * p), 0);
+            
+            // Diversity score: higher when groups are more evenly distributed
+            return (1 - simpson) * 100;
         };
 
         const currentDiversity = calcDiversityIndex(latestLocal);
@@ -118,9 +116,20 @@ export default function DemographicsTab({ demographicsData }) {
         const diversityChange = oldDiversity ? currentDiversity - oldDiversity : null;
         const usDiversity = latestUS ? calcDiversityIndex(latestUS) : null;
 
+        // Calculate 1-year changes
+        const oneYearAgo = sortedLocal[sortedLocal.length - 2];
+        const popGrowth1Yr = oneYearAgo ? 
+            ((totalPop - parseInt(oneYearAgo.total_pop)) / parseInt(oneYearAgo.total_pop)) * 100 : null;
+
+        // Calculate 10-year population growth
+        const tenYearsAgo = sortedLocal[sortedLocal.length - 11];
+        const popGrowth10Yr = tenYearsAgo ? 
+            ((totalPop - parseInt(tenYearsAgo.total_pop)) / parseInt(tenYearsAgo.total_pop)) * 100 : null;
+
+        // Calculate 1-year diversity change
+        const diversityChange1Yr = oneYearAgo ? calcDiversityIndex(latestLocal) - calcDiversityIndex(oneYearAgo) : null;
         return {
             locationName,
-            diversityTrend,
             raceComparison,
             divorceTrend,
             latestYear,
@@ -128,8 +137,10 @@ export default function DemographicsTab({ demographicsData }) {
             pctFemale,
             pctMale,
             pctDivorced,
-            popGrowth,
+            popGrowth1Yr,
+            popGrowth10Yr,
             currentDiversity,
+            diversityChange1Yr,
             diversityChange,
             usDiversity
         };
@@ -160,34 +171,33 @@ export default function DemographicsTab({ demographicsData }) {
     return (
         <div className="space-y-6">
             {/* Key Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <StatCarousel>
                 <StatCard
                     title="Total Population"
                     value={processedData.totalPop.toLocaleString()}
                     subtitle={`Latest: ${processedData.latestYear}`}
-                    trend={processedData.popGrowth}
-                    trendLabel="5-year growth"
+                    trend1Yr={processedData.popGrowth1Yr}
+                    trend10Yr={processedData.popGrowth10Yr}
                 />
                 <StatCard
                     title="Diversity Index"
                     value={`${processedData.currentDiversity.toFixed(1)}`}
                     subtitle={`US avg: ${processedData.usDiversity ? processedData.usDiversity.toFixed(1) : '—'}`}
-                    trend={processedData.diversityChange}
-                    trendLabel="10-year change"
-                    localValue={processedData.currentDiversity}
+                    trend1Yr={processedData.diversityChange1Yr}
+                    trend10Yr={processedData.diversityChange}
                 />
                 <StatCard
                     title="Gender Distribution"
                     value={`${processedData.pctFemale.toFixed(1)}% F / ${processedData.pctMale.toFixed(1)}% M`}
-                    subtitle={processedData.latestYear}
+                    subtitle={`Latest: ${processedData.latestYear}`}
                 />
-            </div>
+            </StatCarousel>
 
             
             {/* Current Snapshot */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                    Current Racial Composition
+                    Current Racial/Ethnic Composition
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
                     {processedData.latestYear} data—10-year changes shown
@@ -228,7 +238,12 @@ export default function DemographicsTab({ demographicsData }) {
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                            <XAxis 
+                                dataKey="year" 
+                                tick={{ fill: '#6b7280', fontSize: 11 }}
+                                interval="preserveStartEnd"  // Add this to show first and last labels
+                                minTickGap={20}  // Add this to prevent label overlap
+                            />
                             <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
                             <Tooltip 
                                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
@@ -245,72 +260,50 @@ export default function DemographicsTab({ demographicsData }) {
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
-
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold mb-3 text-gray-800">
-                        Policy Implications
-                    </h2>
-                    <div className="space-y-3 text-sm text-gray-700">
-                        <PolicyPoint 
-                            icon="📊"
-                            text="Track diversity changes to ensure equitable representation and resource allocation"
-                        />
-                        <PolicyPoint 
-                            icon="🏥"
-                            text="Rising diversity may indicate need for culturally competent services and multilingual support"
-                        />
-                        <PolicyPoint 
-                            icon="👨‍👩‍👧"
-                            text="Monitor divorce trends to assess family support service needs"
-                        />
-                        <PolicyPoint 
-                            icon="🏘️"
-                            text="Population growth may require infrastructure and housing policy adjustments"
-                        />
-                    </div>
-                </div>
             </div>
         </div>
     );
 }
 
-function StatCard({ title, value, subtitle, trend, trendLabel, usComparison, localValue }) {
-    const getTrendDisplay = () => {
+function StatCard({ title, value, subtitle, trend1Yr, trend10Yr }) {
+    const getTrendDisplay = (trend, label) => {
         if (trend === null || trend === undefined) return null;
         const isPositive = trend > 0;
         const color = isPositive ? "text-green-600" : trend < 0 ? "text-red-600" : "text-gray-500";
         const Icon = isPositive ? TrendingUp : trend < 0 ? TrendingDown : Minus;
-        
-        return (
-            <div className="flex items-center gap-1 text-xs mt-1">
-                <Icon size={14} className={color} />
-                <span className={color}>
-                    {isPositive ? '+' : ''}{trend.toFixed(1)} {trendLabel}
-                </span>
-            </div>
-        );
-    };
 
-    const getUSComparisonDisplay = () => {
-        if (!usComparison || !localValue) return null;
-        const difference = localValue - usComparison;
-        const color = Math.abs(difference) < 1 ? 'text-gray-500' : 
-                     difference > 0 ? 'text-green-600' : 'text-orange-600';
+        if (Math.abs(trend) < 0.5) {
+            return (
+                <div className="flex items-center gap-1 text-xs">
+                    <Minus size={12} className="text-gray-500" />
+                    <span className="text-gray-500">Stable {label}</span>
+                </div>
+            );
+        }
         
         return (
-            <p className={`text-xs font-medium ${color} mt-1`}>
-                {difference > 0 ? '+' : ''}{difference.toFixed(1)} vs US
-            </p>
+            <div className="flex items-center gap-1">
+                <Icon size={12} className={color} />
+                <span className={color}>
+                    {isPositive ? '+' : ''}{Math.abs(trend).toFixed(1)}%
+                </span>
+                <span className="text-gray-400">{label}</span>
+            </div>
         );
     };
 
     return (
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
-            <p className="text-2xl font-bold text-gray-900">{value}</p>
-            <p className="text-xs text-gray-500">{subtitle}</p>
-            {getTrendDisplay()}
-            {getUSComparisonDisplay()}
+            <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+            <p className="text-2xl font-bold text-gray-900 mb-2">{value}</p>
+            <p className="text-xs text-gray-500 mb-2">{subtitle}</p>
+            
+            {(trend1Yr !== null || trend10Yr !== null) && (
+                <div className="flex gap-5 text-xs">
+                    {trend1Yr !== null && getTrendDisplay(trend1Yr, '1yr')}
+                    {trend10Yr !== null && getTrendDisplay(trend10Yr, '10yr')}
+                </div>
+            )}
         </div>
     );
 }
@@ -334,7 +327,7 @@ function DemographicCard({ category, value, change }) {
                             <TrendingDown size={12} className="text-red-600" />
                     }
                     <span className={`text-xs font-medium ${getChangeColor()}`}>
-                        {change > 0 ? '+' : ''}{change.toFixed(1)}
+                        {change > 0 ? '+' : ''}{change.toFixed(1)}%
                     </span>
                     <span className="text-xs text-gray-400">10yr</span>
                 </div>
@@ -343,11 +336,3 @@ function DemographicCard({ category, value, change }) {
     );
 }
 
-function PolicyPoint({ icon, text }) {
-    return (
-        <div className="flex items-start gap-2 p-2 bg-purple-50 rounded">
-            <span className="text-lg flex-shrink-0">{icon}</span>
-            <p className="text-sm">{text}</p>
-        </div>
-    );
-}
