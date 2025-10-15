@@ -383,7 +383,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                                     : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                             }`}
                         >
-                            {state_full}
+                            {state_full || "Your State"}
                         </button>
                         <button
                             onClick={() => setActiveTab("county")}
