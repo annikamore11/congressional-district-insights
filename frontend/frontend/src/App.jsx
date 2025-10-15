@@ -80,7 +80,7 @@ export default function App() {
         
         // If already on district page, navigate again to trigger refresh
         if (location.pathname === '/') {
-          navigate("/home", {
+          navigate("/", {
             state: { 
               regionCode: newRegionCode, 
               region: newRegion, 
