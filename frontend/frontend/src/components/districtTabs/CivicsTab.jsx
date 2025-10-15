@@ -1,8 +1,35 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
-import StatCard from "./StatCard";
 
-export default function CivicsTab({ chartData }) {
+export default function CivicsTab({ civicsData }) {
+    // Process data once when civicsData is available
+    const chartData = useMemo(() => {
+        if (!civicsData || civicsData.length === 0) return [];
+
+        // Get last 6 election years
+        const years = [...new Set(civicsData.map(r => r.year))].sort((a, b) => b - a).slice(0, 6).reverse();
+        
+        return years.map(year => {
+            const yearData = civicsData.filter(r => r.year === year);
+            const dem = yearData.filter(r => r.party.toLowerCase() === "democrat")
+                .reduce((sum, r) => sum + r.candidatevotes, 0);
+            const rep = yearData.filter(r => r.party.toLowerCase() === "republican")
+                .reduce((sum, r) => sum + r.candidatevotes, 0);
+            const other = yearData.filter(r => 
+                r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican"
+            ).reduce((sum, r) => sum + r.candidatevotes, 0);
+            
+            const total = dem + rep + other;
+            
+            return {
+                year: year.toString(),
+                Democrat: total > 0 ? parseFloat(((dem / total) * 100).toFixed(1)) : 0,
+                Republican: total > 0 ? parseFloat(((rep / total) * 100).toFixed(1)) : 0,
+                Other: total > 0 ? parseFloat(((other / total) * 100).toFixed(1)) : 0
+            };
+        });
+    }, [civicsData]);
+
     return (
         <>
             {/* Presidential Election Results */}
@@ -90,11 +117,13 @@ export default function CivicsTab({ chartData }) {
                     title="Leading Party"
                     value={chartData.length > 0 ? getLeadingParty(chartData[chartData.length - 1]) : "—"}
                     subtitle="Latest result"
+                    color={true}
                 />
                 <StatCard 
                     title="Historical Trend"
                     value={chartData.length >= 2 ? getTrend(chartData) : "—"}
                     subtitle="Last 6 elections"
+                    color={true}
                 />
             </div>
         </>
@@ -119,4 +148,22 @@ function getTrend(chartData) {
     if (demWins > repWins) return "Lean D";
     if (repWins > demWins) return "Lean R";
     return "Competitive";
+}
+
+function StatCard({ title, value, subtitle, color }) {
+    const getColor = () => {
+        if (!color) return 'text-gray-900';
+        if (value === 'Democrat' || value === 'Lean D') return 'text-blue-600';
+        if (value === 'Republican' || value === 'Lean R') return 'text-red-600';
+        if (value === 'Competitive') return 'text-purple-600';
+        return 'text-gray-900';
+    };
+
+    return (
+        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
+            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
+            <p className={`text-2xl font-bold ${getColor()}`}>{value}</p>
+            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+        </div>
+    );
 }

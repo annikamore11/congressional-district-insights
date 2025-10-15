@@ -7,34 +7,6 @@ import HealthTab from "../components/districtTabs/HealthTab";
 import EducationTab from "../components/districtTabs/EducationTab";
 import RepCard from "../components/districtTabs/RepCard";
 
-// Process election data into percentage by party for most recent years
-function processElectionData(rawResults, setChartFn) {
-    // Get last 6 election years
-    const years = [...new Set(rawResults.map(r => r.year))].sort((a, b) => b - a).slice(0, 6).reverse();
-    
-    const chartData = years.map(year => {
-        const yearData = rawResults.filter(r => r.year === year);
-        const dem = yearData.filter(r => r.party.toLowerCase() === "democrat")
-            .reduce((sum, r) => sum + r.candidatevotes, 0);
-        const rep = yearData.filter(r => r.party.toLowerCase() === "republican")
-            .reduce((sum, r) => sum + r.candidatevotes, 0);
-        const other = yearData.filter(r => 
-            r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican"
-        ).reduce((sum, r) => sum + r.candidatevotes, 0);
-        
-        const total = dem + rep + other;
-        
-        return {
-            year: year.toString(),
-            Democrat: total > 0 ? parseFloat(((dem / total) * 100).toFixed(1)) : 0,
-            Republican: total > 0 ? parseFloat(((rep / total) * 100).toFixed(1)) : 0,
-            Other: total > 0 ? parseFloat(((other / total) * 100).toFixed(1)) : 0
-        };
-    });
-    
-    setChartFn(chartData);
-}
-
 // Collapsible sources component
 function CollapsibleSources() {
     const [isExpanded, setIsExpanded] = useState(false);
@@ -137,8 +109,8 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
     const [activeTab, setActiveTab] = useState("state");
     const [activeSubTab, setActiveSubTab] = useState("civics");
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [stateResults, setStateResults] = useState([]);
-    const [countyResults, setCountyResults] = useState([]);
+    const [civicsStateResults, setCivicsStateResults] = useState([]);
+    const [civicsCountyResults, setCivicsCountyResults] = useState([]);
     const [healthStateResults, setHealthStateResults] = useState([]);
     const [healthCountyResults, setHealthCountyResults] = useState([]);
     const [demograpicsStateResults, setDemographicsStateResults] = useState([]);
@@ -149,8 +121,6 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
     const [economyCountyResults, setEconomyCountyResults] = useState([]);
     const [members, setMembers] = useState([]);
     const [county, setCounty] = useState(null);
-    const [stateChartData, setStateChartData] = useState([]);
-    const [countyChartData, setCountyChartData] = useState([]);
 
     const senators = members.filter(m => m.role === "sen");
     const houseReps = members.filter(m => m.role === "rep");
@@ -160,7 +130,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
         ? senators.map(s => s.bio_id)
         : members.map(m => m.bio_id);
 
-    const currentChartData = activeTab === "state" ? stateChartData : countyChartData;
+    const currentCivicsData = activeTab === "state" ? civicsStateResults : civicsCountyResults;
     const currentHealthData = activeTab === "state" ? healthStateResults : healthCountyResults;
     const currentDemographicsData = activeTab === "state" ? demograpicsStateResults : demographicsCountyResults;
     const currentEducationData = activeTab === "state" ? educationStateResults : educationCountyResults;
@@ -199,11 +169,9 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                 const data = await resp.json();
                 if (data.results) {
                     if (activeTab === "state") {
-                        setStateResults(data.results);
-                        processElectionData(data.results, setStateChartData);
+                        setCivicsStateResults(data.results);
                     } else {
-                        setCountyResults(data.results);
-                        processElectionData(data.results, setCountyChartData);
+                        setCivicsCountyResults(data.results);
                     }
                 }
             } catch (err) {
@@ -452,7 +420,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                         </div>
 
                         {/* Tab Content */}
-                        {activeSubTab === "civics" && <CivicsTab chartData={currentChartData} />}
+                        {activeSubTab === "civics" && <CivicsTab civicsData={currentCivicsData} />}
                         {activeSubTab === "demographics" && <DemographicsTab demographicsData={currentDemographicsData} />}
                         {activeSubTab === "economy" && <EconomyTab  economyData={currentEconomyData} />}
                         {activeSubTab === "health" && <HealthTab healthData={currentHealthData} />}
