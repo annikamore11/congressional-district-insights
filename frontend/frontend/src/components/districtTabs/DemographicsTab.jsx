@@ -60,18 +60,20 @@ export default function DemographicsTab({ demographicsData }) {
                 change: getChange(latestLocal, oldestInTrend, 'pct_asian')
             },
             { 
-                category: 'Hispanic', 
-                local: parseFloat(latestLocal?.pct_hispanic) || 0,
-                us: parseFloat(latestUS?.pct_hispanic) || 0,
-                change: getChange(latestLocal, oldestInTrend, 'pct_hispanic')
-            },
-            { 
                 category: 'Other', 
                 local: sumOtherCategories(latestLocal),
                 us: sumOtherCategories(latestUS),
                 change: sumOtherCategories(latestLocal) - sumOtherCategories(oldestInTrend)
             }
         ];
+        
+        // Separate ethnicity data
+        const ethnicityData = {
+            category: 'Hispanic/Latino',
+            local: parseFloat(latestLocal?.pct_hispanic) || 0,
+            us: parseFloat(latestUS?.pct_hispanic) || 0,
+            change: getChange(latestLocal, oldestInTrend, 'pct_hispanic')
+        };
 
         // Divorce rate trend
         const divorceTrend = sortedLocal.slice(-11).map(local => {
@@ -131,6 +133,7 @@ export default function DemographicsTab({ demographicsData }) {
         return {
             locationName,
             raceComparison,
+            ethnicityData,  // Add this
             divorceTrend,
             latestYear,
             totalPop,
@@ -194,16 +197,16 @@ export default function DemographicsTab({ demographicsData }) {
             </StatCarousel>
 
             
-            {/* Current Snapshot */}
+            {/* Current Snapshot - Race */}
             <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                    Current Racial/Ethnic Composition
+                    Current Racial Composition
                 </h2>
                 <p className="text-sm text-gray-600 mb-4">
-                    {processedData.latestYear} data—10-year changes shown
+                    {processedData.latestYear} data—10-year changes shown. Note: Race categories are independent of Hispanic/Latino ethnicity.
                 </p>
 
-                <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                     {processedData.raceComparison.map((race) => (
                         <DemographicCard
                             key={race.category}
@@ -212,6 +215,30 @@ export default function DemographicsTab({ demographicsData }) {
                             change={race.change}
                         />
                     ))}
+                </div>
+            </div>
+
+            {/* Hispanic/Latino Ethnicity - Separate Section */}
+            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <h2 className="text-xl font-semibold mb-1 text-gray-800">
+                    Hispanic/Latino Ethnicity
+                </h2>
+                <p className="text-sm text-gray-600 mb-4">
+                    Hispanic/Latino is an ethnicity, not a race. Individuals may identify as Hispanic/Latino and also identify with any racial category above.
+                </p>
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <DemographicCard
+                        key={processedData.ethnicityData.category}
+                        category={processedData.ethnicityData.category}
+                        value={processedData.ethnicityData.local}
+                        change={processedData.ethnicityData.change}
+                    />
+                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                        <p className="text-xs font-medium text-gray-600 mb-1">U.S. Average</p>
+                        <p className="text-2xl font-bold text-gray-900">{processedData.ethnicityData.us.toFixed(1)}%</p>
+                        <p className="text-xs text-gray-500 mt-2">National comparison</p>
+                    </div>
                 </div>
             </div>
 

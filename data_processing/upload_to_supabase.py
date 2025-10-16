@@ -64,8 +64,14 @@ def upload_csv_in_batches(csv_path, table_name, batch_size=1000):
 
 
 if __name__ == "__main__":
+    # upload_csv_in_batches(
+    #     csv_path="./cleaned_data/chr_trends_cleaned.csv",
+    #     table_name="county_health_ratings_trends",
+    #     batch_size=1000
+    # )
+
     upload_csv_in_batches(
-        csv_path="./cleaned_data/chr_trends_cleaned.csv",
-        table_name="county_health_ratings_trends",
+        csv_path="./cleaned_data/cleaned_countypres_2000-2024.csv",
+        table_name="election_results_by_county",
         batch_size=1000
     )

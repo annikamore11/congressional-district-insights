@@ -2,31 +2,55 @@ import React, { useMemo } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export default function CivicsTab({ civicsData }) {
-    // Process data once when civicsData is available
     const chartData = useMemo(() => {
         if (!civicsData || civicsData.length === 0) return [];
 
         // Get last 6 election years
         const years = [...new Set(civicsData.map(r => r.year))].sort((a, b) => b - a).slice(0, 6).reverse();
         
+        // Get all unique parties across all years (excluding Democrat and Republican)
+        const allParties = [...new Set(
+            civicsData
+                .filter(r => r.party && r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican")
+                .map(r => r.party)
+        )];
+        
         return years.map(year => {
             const yearData = civicsData.filter(r => r.year === year);
-            const dem = yearData.filter(r => r.party.toLowerCase() === "democrat")
-                .reduce((sum, r) => sum + r.candidatevotes, 0);
-            const rep = yearData.filter(r => r.party.toLowerCase() === "republican")
-                .reduce((sum, r) => sum + r.candidatevotes, 0);
-            const other = yearData.filter(r => 
-                r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican"
-            ).reduce((sum, r) => sum + r.candidatevotes, 0);
             
-            const total = dem + rep + other;
+            const dem = yearData.filter(r => r.party && r.party.toLowerCase() === "democrat")
+                .reduce((sum, r) => sum + r.candidatevotes, 0);
+            const rep = yearData.filter(r => r.party && r.party.toLowerCase() === "republican")
+                .reduce((sum, r) => sum + r.candidatevotes, 0);
             
-            return {
+            // Create an object to hold all party vote counts
+            const result = {
                 year: year.toString(),
-                Democrat: total > 0 ? parseFloat(((dem / total) * 100).toFixed(1)) : 0,
-                Republican: total > 0 ? parseFloat(((rep / total) * 100).toFixed(1)) : 0,
-                Other: total > 0 ? parseFloat(((other / total) * 100).toFixed(1)) : 0
+                Democrat: 0,
+                Republican: 0
             };
+            
+            // Calculate percentages for each party
+            allParties.forEach(party => {
+                const votes = yearData.filter(r => r.party && r.party.toLowerCase() === party.toLowerCase())
+                    .reduce((sum, r) => sum + r.candidatevotes, 0);
+                result[party] = votes;
+            });
+            
+            // Calculate total votes
+            const total = dem + rep + Object.values(result).reduce((sum, val) => {
+                return typeof val === 'number' && val !== dem && val !== rep ? sum + val : sum;
+            }, 0);
+            
+            // Convert to percentages
+            result.Democrat = total > 0 ? parseFloat(((dem / total) * 100).toFixed(1)) : 0;
+            result.Republican = total > 0 ? parseFloat(((rep / total) * 100).toFixed(1)) : 0;
+            
+            allParties.forEach(party => {
+                result[party] = total > 0 ? parseFloat(((result[party] / total) * 100).toFixed(1)) : 0;
+            });
+            
+            return result;
         });
     }, [civicsData]);
 
@@ -53,16 +77,21 @@ export default function CivicsTab({ civicsData }) {
                                     <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
                                     <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
                                 </linearGradient>
+                                <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                                </linearGradient>
+                                <linearGradient id="colorLibertarian" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.1}/>
+                                </linearGradient>
                                 <linearGradient id="colorOther" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
                                     <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.1}/>
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis 
-                                dataKey="year" 
-                                tick={{ fill: '#6b7280', fontSize: 12 }}
-                            />
+                            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 12 }} />
                             <YAxis 
                                 label={{ value: 'Vote Share (%)', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: 12 } }}
                                 tick={{ fill: '#6b7280', fontSize: 12 }}
@@ -91,7 +120,23 @@ export default function CivicsTab({ civicsData }) {
                             />
                             <Area 
                                 type="monotone" 
-                                dataKey="Other" 
+                                dataKey="GREEN" 
+                                stackId="1"
+                                stroke="#10b981" 
+                                fillOpacity={1}
+                                fill="url(#colorGreen)" 
+                            />
+                            <Area 
+                                type="monotone" 
+                                dataKey="LIBERTARIAN" 
+                                stackId="1"
+                                stroke="#fbbf24" 
+                                fillOpacity={1}
+                                fill="url(#colorLibertarian)" 
+                            />
+                            <Area 
+                                type="monotone" 
+                                dataKey="OTHER" 
                                 stackId="1"
                                 stroke="#94a3b8" 
                                 fillOpacity={1}

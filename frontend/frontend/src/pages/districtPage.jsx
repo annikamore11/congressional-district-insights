@@ -162,6 +162,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                 let resp;
                 if (activeTab === "state") {
                     resp = await fetch(`${API_BASE}/api/state/${state_name}`);
+                    
                 } else {
                     resp = await fetch(`${API_BASE}/api/county/${state_name}/${county}`);
                 }
@@ -170,6 +171,7 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
                 if (data.results) {
                     if (activeTab === "state") {
                         setCivicsStateResults(data.results);
+                        
                     } else {
                         setCivicsCountyResults(data.results);
                     }

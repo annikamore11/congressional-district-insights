@@ -99,17 +99,24 @@ export default function App() {
   };
 
   // Initial location fetch from IP
-  useEffect(() => {
+// Initial location fetch from IP
+useEffect(() => {
     async function fetchLocation() {
       try {
         const resp = await fetch('https://ipwho.is/');
         const data = await resp.json();
-        if (data) {
-          setZip(data.postal);
-          setLat(data.latitude);
-          setLong(data.longitude);
-          setRegion(data.region);
-          setRegionCode(data.region_code);
+        
+        console.log('IP location data:', data); // Debug log
+        
+        if (data && data.success !== false) {
+          setZip(data.postal || '');
+          setLat(data.latitude || '');
+          setLong(data.longitude || '');
+          setRegion(data.region || '');
+          setRegionCode(data.region_code || '');
+        } else {
+          console.error('IP location fetch failed:', data);
+          // Fallback to default location or show error
         }
       } catch (err) {
         console.error("Failed to fetch IP location:", err);
