@@ -219,31 +219,32 @@ export default function DemographicsTab({ demographicsData }) {
             </div>
 
             {/* Hispanic/Latino Ethnicity - Separate Section */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                    Hispanic/Latino Ethnicity
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                    Hispanic/Latino is an ethnicity, not a race. Individuals may identify as Hispanic/Latino and also identify with any racial category above.
-                </p>
+            {/* Divorce Rate Trend + Hispanic/Latino Ethnicity side by side */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Hispanic/Latino Ethnicity - Left Side */}
+                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-semibold mb-1 text-gray-800">
+                        Hispanic/Latino Ethnicity
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-4">
+                        Hispanic/Latino is an ethnicity, not a race. Individuals may identify as Hispanic/Latino and also identify with any racial category above.
+                    </p>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <DemographicCard
-                        key={processedData.ethnicityData.category}
-                        category={processedData.ethnicityData.category}
-                        value={processedData.ethnicityData.local}
-                        change={processedData.ethnicityData.change}
-                    />
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                        <p className="text-xs font-medium text-gray-600 mb-1">U.S. Average</p>
-                        <p className="text-2xl font-bold text-gray-900">{processedData.ethnicityData.us.toFixed(1)}%</p>
-                        <p className="text-xs text-gray-500 mt-2">National comparison</p>
+                    <div className="space-y-4">
+                        <DemographicCard
+                            category={processedData.ethnicityData.category}
+                            value={processedData.ethnicityData.local}
+                            change={processedData.ethnicityData.change}
+                        />
+                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                            <p className="text-xs font-medium text-gray-600 mb-1">U.S. Average</p>
+                            <p className="text-2xl font-bold text-gray-900">{processedData.ethnicityData.us.toFixed(1)}%</p>
+                            <p className="text-xs text-gray-500 mt-2">National comparison</p>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {/* Divorce Rate Trend */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Divorce Rate Trend - Right Side */}
                 <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         Divorce Rate Trend
@@ -268,8 +269,8 @@ export default function DemographicsTab({ demographicsData }) {
                             <XAxis 
                                 dataKey="year" 
                                 tick={{ fill: '#6b7280', fontSize: 11 }}
-                                interval="preserveStartEnd"  // Add this to show first and last labels
-                                minTickGap={20}  // Add this to prevent label overlap
+                                interval="preserveStartEnd"
+                                minTickGap={20}
                             />
                             <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} />
                             <Tooltip 
