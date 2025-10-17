@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Menu, X, Info, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { Menu, X, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import CivicsTab from "../components/districtTabs/CivicsTab";
 import DemographicsTab from "../components/districtTabs/DemographicsTab";
 import EconomyTab from "../components/districtTabs/EconomyTab";
@@ -103,8 +103,16 @@ function CollapsibleSources() {
     );
 }
 
-export default function DistrictContent({ state_name, state_full, lat, long }) {
+export default function DistrictContent({ locationData }) {
     const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5001";
+
+    if (!locationData) {
+        return (
+            <div className="flex h-full items-center justify-center">
+                <p className="text-gray-500">Loading location data...</p>
+            </div>
+        );
+    }
 
     const [showAccuracyBanner, setShowAccuracyBanner] = useState(true);
     const [activeTab, setActiveTab] = useState("state");
@@ -120,8 +128,11 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
     const [educationCountyResults, setEducationCountyResults] = useState([]);
     const [economyStateResults, setEconomyStateResults] = useState([]);
     const [economyCountyResults, setEconomyCountyResults] = useState([]);
-    const [members, setMembers] = useState([]);
-    const [county, setCounty] = useState(null);
+
+    const state_name = locationData.state;
+    const state_full = locationData.state_full;
+    const members = locationData.legislators;
+    const county = locationData.county;
 
     const senators = members.filter(m => m.role === "sen");
     const houseReps = members.filter(m => m.role === "rep");
@@ -136,25 +147,6 @@ export default function DistrictContent({ state_name, state_full, lat, long }) {
     const currentDemographicsData = activeTab === "state" ? demograpicsStateResults : demographicsCountyResults;
     const currentEducationData = activeTab === "state" ? educationStateResults : educationCountyResults;
     const currentEconomyData = activeTab === "state" ? economyStateResults : economyCountyResults;
-
-    useEffect(() => {
-        async function fetchUserReps() {
-            try {
-                const resp = await fetch(`${API_BASE}/api/reps?lat=${lat}&long=${long}`);
-                const data = await resp.json();
-                
-                const members = data.results;
-                setMembers(members);
-                setCounty(data.county);
-            } catch (err) {
-                console.error("Failed to fetch members:", err);
-            }
-        }
-        
-        if (lat && long) {
-            fetchUserReps();
-        }
-    }, [lat, long]);
 
     // Fetch election results (state or county based on activeTab)
     useEffect(() => {

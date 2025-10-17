@@ -4,6 +4,7 @@ import yaml
 from flask import Flask, jsonify, request 
 from flask_cors import CORS
 from dotenv import load_dotenv
+from constants import STATE_FULL
 from database.queries import (
     aggregate_state_results, fetch_county_results, 
     fetch_health_state, fetch_health_county, 
@@ -79,19 +80,6 @@ def group_by_state():
         states.setdefault(state.upper(), []).append(entry)
     _cache["states"] = states
     return states
-
-# Endpoint to list states
-@app.route("/api/states")
-def api_states():
-    states = group_by_state()
-    return jsonify(sorted(list(states.keys())))
-
-# Endpoint to list members for selected state
-@app.route("/api/members/<state>")
-def api_members(state):
-    states = group_by_state()
-    members = states.get(state.upper(), [])
-    return jsonify(members)
 
 # Function to get cash, debts, raised, and spent for members to create finance overview bar chart
 def fetch_fec_totals(fec_id, cycle=2024):
@@ -193,6 +181,19 @@ def fetch_fec_top_contributors(committee_id, cycle=2024):
     
     first10_summary = cleaned[:10]
     return first10_summary
+
+# Endpoint to list states
+@app.route("/api/states")
+def api_states():
+    states = group_by_state()
+    return jsonify(sorted(list(states.keys())))
+
+# Endpoint to list members for selected state
+@app.route("/api/members/<state>")
+def api_members(state):
+    states = group_by_state()
+    members = states.get(state.upper(), [])
+    return jsonify(members)
 
 # Endpoint to return the totals from fetch_fec_totals function
 @app.route("/api/member_fec", methods=["POST"])
@@ -310,36 +311,40 @@ def get_county_results(state_name, county):
         "results": results
     })
 
-# Retrieve User's county and reps
-@app.route("/api/reps/")
-def get_reps():
-    """Get representatives from latitude/longitude using geocodio"""
-    latitude = request.args.get("lat")
-    longitude = request.args.get("long")
+
+@app.route("/api/geocode")
+def geocode():
+    """Geocode address/ZIP or reverse geocode lat/lng using Geocodio"""
+    query = request.args.get("q")  # Address or ZIP
+    lat = request.args.get("lat")
+    lng = request.args.get("lng")
     
-    if not latitude or not longitude:
-        return jsonify({"error": "Missing lat or long parameters"}), 400
+    if not query and not (lat and lng):
+        return jsonify({"error": "Missing query or lat/lng parameters"}), 400
     
     try:
-        resp = requests.get(
-            f"https://api.geocod.io/v1.9/reverse?q={latitude},{longitude}&fields=cd&api_key={GEOCODIO_KEY}",
-            timeout=10
-        )
+        # Determine if this is forward geocoding or reverse geocoding
+        if query:
+            # Forward geocoding (address or ZIP)
+            url = f"https://api.geocod.io/v1.9/geocode?q={query}&fields=cd&api_key={GEOCODIO_KEY}"
+        else:
+            # Reverse geocoding (lat/lng)
+            url = f"https://api.geocod.io/v1.9/reverse?q={lat},{lng}&fields=cd&api_key={GEOCODIO_KEY}"
+        
+        resp = requests.get(url, timeout=10)
         data = resp.json()
         
         if data.get("results"):
             result = data["results"][0]
-            county = result.get("address_components", {}).get("county")
+            location = result["location"]
+            components = result["address_components"]
             cd_fields = result.get("fields", {}).get("congressional_districts", [])
             
+            # Extract legislators if available
+            legislators = []
             if cd_fields:
-                # Extract just the legislators from the first district
-                legislators = cd_fields[0].get("current_legislators", [])
-                
-                # Format the response
-                formatted_legislators = []
-                for leg in legislators:
-                    formatted_legislators.append({
+                for leg in cd_fields[0].get("current_legislators", []):
+                    legislators.append({
                         "name": f"{leg['bio']['first_name']} {leg['bio']['last_name']}",
                         "role": "sen" if leg["type"] == "senator" else "rep",
                         "party": leg["bio"]["party"],
@@ -349,12 +354,20 @@ def get_reps():
                         "phone": leg["contact"]["phone"],
                         "website": leg["contact"]["url"]
                     })
-                
-                return jsonify({"county": county, "results": formatted_legislators})
+            
+            return jsonify({
+                "lat": location["lat"],
+                "lng": location["lng"],
+                "state": components["state"],
+                "state_full": STATE_FULL.get(components["state"], components["state"]),
+                "zip": components.get("zip"),
+                "county": components.get("county"),
+                "legislators": legislators
+            })
         
-        return jsonify({"error": "No representatives found"}), 404
+        return jsonify({"error": "No results found"}), 404
     except Exception as e:
-        print(f"Error in /api/reps: {str(e)}")
+        print(f"Error in /api/geocode: {str(e)}")
         import traceback
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500

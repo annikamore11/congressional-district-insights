@@ -1,18 +1,9 @@
 import { useEffect, useState } from "react";
 import { useLocation as useRouterLocation } from "react-router-dom";
 import {
-  Menu,
   X,
-  ChevronRight,
-  ChevronLeft,
-  Building2,
-  LogIn,
-  LogOut,
-  UserRound,
   MapPinHouse,
   MapPin,
-  User,
-  UserPlus,
 } from "lucide-react";
 import {
   BrowserRouter as Router,
@@ -21,7 +12,7 @@ import {
   useNavigate,
   useLocation,
 } from "react-router-dom";
-
+import AddressAutocomplete from "./components/AddressAutocomplete.jsx";
 import { issueCategories, organizations } from "./data/constants.js";
 import HomeContent from "./pages/homePage.jsx";
 import DistrictContent from "./pages/districtPage.jsx";
@@ -33,153 +24,114 @@ function HomePage() {
 // Update the DistrictOverview component:
 function DistrictOverview() {
   const location = useRouterLocation();
-  const { regionCode, region, lat, long } = location.state || {};
+  const { locationData } = location.state || {};
 
   // Use key prop to force re-mount when state changes
   return (
     <DistrictContent 
-      key={`${regionCode}-${lat}-${long}`} // Forces re-mount on change
-      state_name={regionCode} 
-      state_full={region} 
-      lat={lat} 
-      long={long} 
+      key={`${locationData}`} // Forces re-mount on change
+      locationData={locationData}
     />
   );
 }
 
 export default function App() {
-  const GEOCODIO_KEY = import.meta.env.VITE_GEOCODIO_KEY;
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5001";
 
   const navigate = useNavigate();
   const location = useLocation();
+  const [locationData, setLocationData] = useState("");
   const [zip, setZip] = useState("");
-  const [lat, setLat] = useState("");
-  const [long, setLong] = useState("");
-  const [region, setRegion] = useState("");
-  const [regionCode, setRegionCode] = useState("");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [addressMode, setAddressMode] = useState('zip'); // 'zip' or 'address'
+  const [addressMode, setAddressMode] = useState('zip'); 
   const [fullAddress, setFullAddress] = useState('');
 
+  
   // Fetch location based on ZIP code
   const fetchLocationFromZip = async (zipCode) => {
-    if (!zipCode || zipCode.length < 5) return;
-    
-    setIsLoadingLocation(true);
-    try {
-      const resp = await fetch(
-        `https://api.geocod.io/v1.9/geocode?q=${zipCode}&fields=cd&api_key=${GEOCODIO_KEY}`
-      );
-      const data = await resp.json();
+      if (!zipCode || zipCode.length < 5) return;
       
-      if (data && data.results && data.results.length > 0) {
-        const result = data.results[0];
-        const location = result.location;
-        const components = result.address_components;
-
-        const newLat = location.lat;
-        const newLong = location.lng;
-        const newRegion = components.state;
-        const newRegionCode = components.state; // You might need state abbreviation mapping
-
-        setLat(newLat);
-        setLong(newLong);
-        setRegion(newRegion);
-        setRegionCode(newRegionCode);
+      setIsLoadingLocation(true);
+      try {
+        // Call YOUR backend instead of Geocodio directly
+        const resp = await fetch(`${API_BASE}/api/geocode?q=${zipCode}`);
+        const data = await resp.json();
         
-        // If already on district page, navigate again to trigger refresh
-        if (location.pathname === '/') {
-          navigate("/", {
-            state: { 
-              regionCode: newRegionCode, 
-              region: newRegion, 
-              lat: newLat, 
-              long: newLong 
-            },
-            replace: true // Replace current history entry instead of adding new one
-          });
+        if(data) {
+          setLocationData(data);
+          setZip(data.zip);
+          
+          if (location.pathname === '/') {
+            navigate("/", {
+              state: { 
+                locationData: data
+              },
+              replace: true
+            });
+          }
         }
+      } catch (err) {
+        console.error("Failed to fetch location from ZIP:", err);
+      } finally {
+        setIsLoadingLocation(false);
       }
-    } catch (err) {
-      console.error("Failed to fetch location from ZIP:", err);
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  };
+    };
 
   const fetchLocationFromAddress = async (address) => {
-    console.log(address)
-    if (!address) return;
-    
-    setIsLoadingLocation(true);
-    try {
-      const resp = await fetch(
-        `https://api.geocod.io/v1.9/geocode?q=${address}&fields=cd&api_key=${GEOCODIO_KEY}`
-      );
-      const data = await resp.json();
+      if (!address) return;
       
-      if (data.results && data.results.length > 0) {
-        const result = data.results[0];
-        const location = result.location;
-        const components = result.address_components;
+      setIsLoadingLocation(true);
+      try {
+        const resp = await fetch(`${API_BASE}/api/geocode?q=${encodeURIComponent(address)}`);
+        const data = await resp.json();
         
-        const newLat = location.lat;
-        const newLong = location.lng;
-        const newRegion = components.state;
-        const newRegionCode = components.state; // You might need state abbreviation mapping
-        const newZip = components.zip;
-        
-        setLat(newLat);
-        setLong(newLong);
-        setRegion(newRegion);
-        setRegionCode(newRegionCode);
-        setZip(newZip);
-        
-        if (location.pathname === '/') {
-          navigate("/", {
-            state: { 
-              regionCode: newRegionCode, 
-              region: newRegion, 
-              lat: newLat, 
-              long: newLong,
-              zip: newZip
-            },
-            replace: true
-          });
+        if(data) {
+          setLocationData(data);
+          setZip(data.zip);
+          
+          if (location.pathname === '/') {
+            navigate("/", {
+              state: { 
+                locationData: data
+              },
+              replace: true
+            });
+          }
         }
+      } catch (err) {
+        console.error("Failed to fetch location from address:", err);
+      } finally {
+        setIsLoadingLocation(false);
       }
-    } catch (err) {
-      console.error("Failed to fetch location from address:", err);
-    } finally {
-      setIsLoadingLocation(false);
-    }
-  };
+    };
 
-  // Initial location fetch from IP
-  useEffect(() => {
+    // Initial Zip code from IP address load
+    useEffect(() => {
       async function fetchLocation() {
         try {
           const resp = await fetch('https://ipwho.is/');
           const data = await resp.json();
           
-          console.log('IP location data:', data); // Debug log
+          console.log('IP location data:', data);
           
-          if (data && data.success !== false) {
-            setZip(data.postal || '');
-            setLat(data.latitude || '');
-            setLong(data.longitude || '');
-            setRegion(data.region || '');
-            setRegionCode(data.region_code || '');
-          } else {
-            console.error('IP location fetch failed:', data);
-            // Fallback to default location or show error
+          if (data && data.success !== false && data.postal) {
+            // Fetch location data using lat/lng
+            const geocodeResp = await fetch(
+              `${API_BASE}/api/geocode?q=${data.postal}`
+            );
+            const geocodeData = await geocodeResp.json();
+            console.log(geocodeData)
+            if (geocodeData) {
+              setLocationData(geocodeData);
+              setZip(geocodeData.zip || data.postal || '');
+            }
           }
         } catch (err) {
           console.error("Failed to fetch IP location:", err);
         }
       }
       fetchLocation();
-    }, []);
+    }, [API_BASE]);
 
     // Handle ZIP code change with debounce
     const handleZipChange = (e) => {
@@ -258,7 +210,7 @@ export default function App() {
             className="px-3 py-2 transparent-btn font-bold rounded flex items-center gap-1"
             onClick={() =>
               navigate("/", {
-                state: { regionCode, region, lat, long },
+                state: { locationData },
               })
             }
           >
@@ -289,27 +241,12 @@ export default function App() {
                 </button>
               </div>
             ) : (
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={fullAddress}
-                  onChange={(e) => setFullAddress(e.target.value)}
-                  onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
-                      fetchLocationFromAddress(fullAddress);
-                    }
-                  }}
-                  placeholder="Full address..."
-                  className="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 px-3 py-1.5 rounded-l text-sm w-48 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                />
-                <button
-                  onClick={() => setAddressMode('zip')}
-                  className="bg-gray-700 border border-l-0 border-gray-600 text-gray-300 px-2 py-1.5 rounded-r text-xs hover:bg-gray-600 flex items-center"
-                  title="Switch to ZIP code"
-                >
-                  <X size={14} />
-                </button>
-              </div>
+              <AddressAutocomplete
+                onSelectAddress={(address) => {
+                  fetchLocationFromAddress(address);
+                }}
+                onCancel={() => setAddressMode('zip')}
+              />
             )}
             {isLoadingLocation && (
               <div className="absolute right-10 top-1/2 -translate-y-1/2">
@@ -317,6 +254,7 @@ export default function App() {
               </div>
             )}
           </div>
+
           
 
           {/* Login Button */}
@@ -334,7 +272,7 @@ export default function App() {
             className="md:hidden flex items-center transparent-btn px-2 py-1.5 rounded"
             onClick={() =>
               navigate("/", {
-                state: { regionCode, region, lat, long },
+                state: { locationData },
               })
             }
           >
