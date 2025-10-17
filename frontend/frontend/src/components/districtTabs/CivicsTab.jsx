@@ -8,12 +8,12 @@ export default function CivicsTab({ civicsData }) {
         // Get last 6 election years
         const years = [...new Set(civicsData.map(r => r.year))].sort((a, b) => b - a).slice(0, 6).reverse();
         
-        // Get all unique parties across all years (excluding Democrat and Republican)
-        const allParties = [...new Set(
-            civicsData
-                .filter(r => r.party && r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican")
-                .map(r => r.party)
-        )];
+        // Helper function to normalize party names to title case
+        const normalizePartyName = (party) => {
+            if (!party) return '';
+            const lower = party.toLowerCase();
+            return lower.charAt(0).toUpperCase() + lower.slice(1);
+        };
         
         return years.map(year => {
             const yearData = civicsData.filter(r => r.year === year);
@@ -23,16 +23,23 @@ export default function CivicsTab({ civicsData }) {
             const rep = yearData.filter(r => r.party && r.party.toLowerCase() === "republican")
                 .reduce((sum, r) => sum + r.candidatevotes, 0);
             
-            // Create an object to hold all party vote counts
+            // Get parties that actually exist in this year (excluding Dem/Rep)
+            const otherPartiesInYear = [...new Set(
+                yearData
+                    .filter(r => r.party && r.party.toLowerCase() !== "democrat" && r.party.toLowerCase() !== "republican")
+                    .map(r => normalizePartyName(r.party))
+            )];
+            
+            // Create result object
             const result = {
                 year: year.toString(),
                 Democrat: 0,
                 Republican: 0
             };
             
-            // Calculate percentages for each party
-            allParties.forEach(party => {
-                const votes = yearData.filter(r => r.party && r.party.toLowerCase() === party.toLowerCase())
+            // Calculate vote counts for each party present in this year
+            otherPartiesInYear.forEach(party => {
+                const votes = yearData.filter(r => r.party && normalizePartyName(r.party) === party)
                     .reduce((sum, r) => sum + r.candidatevotes, 0);
                 result[party] = votes;
             });
@@ -46,13 +53,35 @@ export default function CivicsTab({ civicsData }) {
             result.Democrat = total > 0 ? parseFloat(((dem / total) * 100).toFixed(1)) : 0;
             result.Republican = total > 0 ? parseFloat(((rep / total) * 100).toFixed(1)) : 0;
             
-            allParties.forEach(party => {
+            otherPartiesInYear.forEach(party => {
                 result[party] = total > 0 ? parseFloat(((result[party] / total) * 100).toFixed(1)) : 0;
             });
             
             return result;
         });
     }, [civicsData]);
+
+    // Get all unique parties across ALL years for rendering
+    const allPartiesAcrossYears = useMemo(() => {
+        if (!chartData || chartData.length === 0) return [];
+        
+        const parties = new Set();
+        chartData.forEach(year => {
+            Object.keys(year).forEach(key => {
+                if (key !== 'year' && key !== 'Democrat' && key !== 'Republican') {
+                    parties.add(key);
+                }
+            });
+        });
+        return Array.from(parties);
+    }, [chartData]);
+
+    // Color mapping for parties
+    const partyColors = {
+        'Green': { stroke: '#10b981', gradient: 'colorGreen' },
+        'Libertarian': { stroke: '#fbbf24', gradient: 'colorLibertarian' },
+        'Other': { stroke: '#94a3b8', gradient: 'colorOther' }
+    };
 
     return (
         <>
@@ -102,6 +131,8 @@ export default function CivicsTab({ civicsData }) {
                                 formatter={(value) => `${value}%`}
                             />
                             <Legend wrapperStyle={{ paddingTop: '20px' }} />
+                            
+                            {/* Always show Democrat and Republican */}
                             <Area 
                                 type="monotone" 
                                 dataKey="Democrat" 
@@ -118,30 +149,23 @@ export default function CivicsTab({ civicsData }) {
                                 fillOpacity={1}
                                 fill="url(#colorRep)" 
                             />
-                            <Area 
-                                type="monotone" 
-                                dataKey="GREEN" 
-                                stackId="1"
-                                stroke="#10b981" 
-                                fillOpacity={1}
-                                fill="url(#colorGreen)" 
-                            />
-                            <Area 
-                                type="monotone" 
-                                dataKey="LIBERTARIAN" 
-                                stackId="1"
-                                stroke="#fbbf24" 
-                                fillOpacity={1}
-                                fill="url(#colorLibertarian)" 
-                            />
-                            <Area 
-                                type="monotone" 
-                                dataKey="OTHER" 
-                                stackId="1"
-                                stroke="#94a3b8" 
-                                fillOpacity={1}
-                                fill="url(#colorOther)" 
-                            />
+                            
+                            {/* Dynamically render other parties that exist in the data */}
+                            {allPartiesAcrossYears.map(party => {
+                                const colors = partyColors[party] || { stroke: '#94a3b8', gradient: 'colorOther' };
+                                return (
+                                    <Area 
+                                        key={party}
+                                        type="monotone" 
+                                        dataKey={party}
+                                        stackId="1"
+                                        stroke={colors.stroke}
+                                        fillOpacity={1}
+                                        fill={`url(#${colors.gradient})`}
+                                        connectNulls={false} // Don't connect across null values
+                                    />
+                                );
+                            })}
                         </AreaChart>
                     </ResponsiveContainer>
                 ) : (

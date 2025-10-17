@@ -48,6 +48,8 @@ function DistrictOverview() {
 }
 
 export default function App() {
+  const GEOCODIO_KEY = import.meta.env.VITE_GEOCODIO_KEY;
+
   const navigate = useNavigate();
   const location = useLocation();
   const [zip, setZip] = useState("");
@@ -56,6 +58,8 @@ export default function App() {
   const [region, setRegion] = useState("");
   const [regionCode, setRegionCode] = useState("");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [addressMode, setAddressMode] = useState('zip'); // 'zip' or 'address'
+  const [fullAddress, setFullAddress] = useState('');
 
   // Fetch location based on ZIP code
   const fetchLocationFromZip = async (zipCode) => {
@@ -63,16 +67,21 @@ export default function App() {
     
     setIsLoadingLocation(true);
     try {
-      const resp = await fetch(`https://api.zippopotam.us/us/${zipCode}`);
+      const resp = await fetch(
+        `https://api.geocod.io/v1.9/geocode?q=${zipCode}&fields=cd&api_key=${GEOCODIO_KEY}`
+      );
       const data = await resp.json();
       
-      if (data && data.places && data.places.length > 0) {
-        const place = data.places[0];
-        const newLat = parseFloat(place.latitude);
-        const newLong = parseFloat(place.longitude);
-        const newRegion = place.state;
-        const newRegionCode = place['state abbreviation'];
-        
+      if (data && data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const location = result.location;
+        const components = result.address_components;
+
+        const newLat = location.lat;
+        const newLong = location.lng;
+        const newRegion = components.state;
+        const newRegionCode = components.state; // You might need state abbreviation mapping
+
         setLat(newLat);
         setLong(newLong);
         setRegion(newRegion);
@@ -98,50 +107,97 @@ export default function App() {
     }
   };
 
-  // Initial location fetch from IP
-// Initial location fetch from IP
-useEffect(() => {
-    async function fetchLocation() {
-      try {
-        const resp = await fetch('https://ipwho.is/');
-        const data = await resp.json();
-        
-        console.log('IP location data:', data); // Debug log
-        
-        if (data && data.success !== false) {
-          setZip(data.postal || '');
-          setLat(data.latitude || '');
-          setLong(data.longitude || '');
-          setRegion(data.region || '');
-          setRegionCode(data.region_code || '');
-        } else {
-          console.error('IP location fetch failed:', data);
-          // Fallback to default location or show error
-        }
-      } catch (err) {
-        console.error("Failed to fetch IP location:", err);
-      }
-    }
-    fetchLocation();
-  }, []);
-
-  // Handle ZIP code change with debounce
-  const handleZipChange = (e) => {
-    const newZip = e.target.value.replace(/\D/g, '').slice(0, 5); // Only numbers, max 5 digits
-    setZip(newZip);
+  const fetchLocationFromAddress = async (address) => {
+    console.log(address)
+    if (!address) return;
     
-    // Fetch location when ZIP is complete (5 digits)
-    if (newZip.length === 5) {
-      fetchLocationFromZip(newZip);
+    setIsLoadingLocation(true);
+    try {
+      const resp = await fetch(
+        `https://api.geocod.io/v1.9/geocode?q=${address}&fields=cd&api_key=${GEOCODIO_KEY}`
+      );
+      const data = await resp.json();
+      
+      if (data.results && data.results.length > 0) {
+        const result = data.results[0];
+        const location = result.location;
+        const components = result.address_components;
+        
+        const newLat = location.lat;
+        const newLong = location.lng;
+        const newRegion = components.state;
+        const newRegionCode = components.state; // You might need state abbreviation mapping
+        const newZip = components.zip;
+        
+        setLat(newLat);
+        setLong(newLong);
+        setRegion(newRegion);
+        setRegionCode(newRegionCode);
+        setZip(newZip);
+        
+        if (location.pathname === '/') {
+          navigate("/", {
+            state: { 
+              regionCode: newRegionCode, 
+              region: newRegion, 
+              lat: newLat, 
+              long: newLong,
+              zip: newZip
+            },
+            replace: true
+          });
+        }
+      }
+    } catch (err) {
+      console.error("Failed to fetch location from address:", err);
+    } finally {
+      setIsLoadingLocation(false);
     }
   };
 
-  // Handle Enter key press
-  const handleZipKeyPress = (e) => {
-    if (e.key === 'Enter' && zip.length === 5) {
-      fetchLocationFromZip(zip);
-    }
-  };
+  // Initial location fetch from IP
+  useEffect(() => {
+      async function fetchLocation() {
+        try {
+          const resp = await fetch('https://ipwho.is/');
+          const data = await resp.json();
+          
+          console.log('IP location data:', data); // Debug log
+          
+          if (data && data.success !== false) {
+            setZip(data.postal || '');
+            setLat(data.latitude || '');
+            setLong(data.longitude || '');
+            setRegion(data.region || '');
+            setRegionCode(data.region_code || '');
+          } else {
+            console.error('IP location fetch failed:', data);
+            // Fallback to default location or show error
+          }
+        } catch (err) {
+          console.error("Failed to fetch IP location:", err);
+        }
+      }
+      fetchLocation();
+    }, []);
+
+    // Handle ZIP code change with debounce
+    const handleZipChange = (e) => {
+      const newZip = e.target.value.replace(/\D/g, '').slice(0, 5); // Only numbers, max 5 digits
+      setZip(newZip);
+      
+      // Fetch location when ZIP is complete (5 digits)
+      if (newZip.length === 5) {
+        fetchLocationFromZip(newZip);
+      }
+    };
+
+    // Handle Enter key press
+    const handleZipKeyPress = (e) => {
+      if (e.key === 'Enter' && zip.length === 5) {
+        fetchLocationFromZip(zip);
+      }
+    };
 
   return (
     <div className="h-screen w-screen flex flex-col">
@@ -212,22 +268,56 @@ useEffect(() => {
 
         {/* Right side controls */}
         <div className="ml-auto flex items-center gap-2">
-          {/* ZIP Code Input */}
+          {/* Enhanced Location Input with Toggle */}
           <div className="hidden md:block relative">
-            <input
-              type="text"
-              value={`Zip: ${zip}`}
-              onChange={handleZipChange}
-              onKeyPress={handleZipKeyPress}
-              placeholder="ZIP Code"
-              className="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 px-3 py-1.5 rounded text-sm w-28 focus:outline-none focus:ring-2 focus:ring-orange-500"
-            />
+            {addressMode === 'zip' ? (
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={zip}
+                  onChange={handleZipChange}
+                  onKeyPress={handleZipKeyPress}
+                  placeholder="ZIP Code"
+                  className="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 px-3 py-1.5 rounded-l text-sm w-28 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <button
+                  onClick={() => setAddressMode('address')}
+                  className="bg-gray-700 border border-l-0 border-gray-600 text-gray-300 px-2 py-1.5 rounded-r text-xs hover:bg-gray-600 flex items-center"
+                  title="Use full address for better accuracy"
+                >
+                  <MapPin size={14} />
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center">
+                <input
+                  type="text"
+                  value={fullAddress}
+                  onChange={(e) => setFullAddress(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      fetchLocationFromAddress(fullAddress);
+                    }
+                  }}
+                  placeholder="Full address..."
+                  className="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 px-3 py-1.5 rounded-l text-sm w-48 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                />
+                <button
+                  onClick={() => setAddressMode('zip')}
+                  className="bg-gray-700 border border-l-0 border-gray-600 text-gray-300 px-2 py-1.5 rounded-r text-xs hover:bg-gray-600 flex items-center"
+                  title="Switch to ZIP code"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+            )}
             {isLoadingLocation && (
-              <div className="absolute right-2 top-1/2 -translate-y-1/2">
+              <div className="absolute right-10 top-1/2 -translate-y-1/2">
                 <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
           </div>
+          
 
           {/* Login Button */}
           <button className="hidden sm:flex items-center transparent-btn px-3 py-1.5 rounded gap-1">
