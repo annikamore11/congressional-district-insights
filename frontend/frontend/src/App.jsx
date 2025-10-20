@@ -44,7 +44,6 @@ export default function App() {
   const [zip, setZip] = useState("");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [addressMode, setAddressMode] = useState('zip'); 
-  const [fullAddress, setFullAddress] = useState('');
 
   
   // Fetch location based on ZIP code
@@ -53,7 +52,6 @@ export default function App() {
       
       setIsLoadingLocation(true);
       try {
-        // Call YOUR backend instead of Geocodio directly
         const resp = await fetch(`${API_BASE}/api/geocode?q=${zipCode}`);
         const data = await resp.json();
         
@@ -161,7 +159,7 @@ export default function App() {
             className="text-s font-semibold text-white cursor-pointer"
             onClick={() => navigate("/home")}
           >
-            eGutenbergPress
+            eVotersUnited
           </p>
         </div>
 
