@@ -18,8 +18,6 @@ from functions.fec_finance import (
     fetch_fec_top_contributors
 )
 
-
-
 # Load environment variables from .env
 load_dotenv()
 GEOCODIO_KEY = os.getenv("GEOCODIO_KEY")
