@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useLocation as useRouterLocation } from "react-router-dom";
 import {
-  X,
   MapPinHouse,
   MapPin,
 } from "lucide-react";
@@ -21,12 +20,10 @@ function HomePage() {
   return <HomeContent />;
 }
 
-// Update the DistrictOverview component:
 function DistrictOverview() {
   const location = useRouterLocation();
   const { locationData } = location.state || {};
 
-  // Use key prop to force re-mount when state changes
   return (
     <DistrictContent 
       key={`${locationData}`} // Forces re-mount on change
@@ -75,6 +72,7 @@ export default function App() {
       }
     };
 
+  // Fetch location based on address
   const fetchLocationFromAddress = async (address) => {
       if (!address) return;
       
@@ -122,13 +120,23 @@ export default function App() {
             if (geocodeData) {
               setLocationData(geocodeData);
               setZip(geocodeData.zip || data.postal || '');
+              
+              // NEW: Automatically navigate to district page with data
+              if (location.pathname === '/') {
+                navigate("/", {
+                  state: { 
+                    locationData: geocodeData
+                  },
+                  replace: true
+                });
+              }
             }
           }
         } catch (err) {
           console.error("Failed to fetch IP location:", err);
         }
-      }
-      fetchLocation();
+        }
+        fetchLocation();
     }, [API_BASE]);
 
     // Handle ZIP code change with debounce
@@ -167,7 +175,7 @@ export default function App() {
         <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-2">
           {/* Issues Dropdown */}
           <div className="relative group">
-            <button className="px-3 py-2 transparent-btn font-bold rounded">
+            <button className="px-3 py-2 text-white hover:text-orange-600 transition-colors font-bold rounded">
               Issues
             </button>
             <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 p-4">
@@ -186,7 +194,7 @@ export default function App() {
 
           {/* Organizations Dropdown */}
           <div className="relative group">
-            <button className="px-3 py-2 font-bold transparent-btn rounded">
+            <button className="px-3 py-2 font-bold text-white hover:text-orange-600 transition-colors rounded">
               Organizations
             </button>
             <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 p-4">
@@ -205,7 +213,7 @@ export default function App() {
 
           {/* District Data Link */}
           <button 
-            className="px-3 py-2 transparent-btn font-bold rounded flex items-center gap-1"
+            className="px-3 py-2 text-white hover:text-orange-600 transition-colors font-bold hover:underline rounded flex items-center gap-1"
             onClick={() =>
               navigate("/", {
                 state: { locationData },
@@ -256,7 +264,7 @@ export default function App() {
           
 
           {/* Login Button */}
-          <button className="hidden sm:flex items-center transparent-btn px-3 py-1.5 rounded gap-1">
+          <button className="hidden sm:flex items-center text-white hover:text-orange-600 transition-colors px-3 py-1.5 rounded gap-1">
             <span>Log In</span>
           </button>
 
@@ -267,7 +275,7 @@ export default function App() {
 
           {/* Mobile Menu Button */}
           <button 
-            className="md:hidden flex items-center transparent-btn px-2 py-1.5 rounded"
+            className="md:hidden flex items-center text-white hover:text-orange-600 transition-colors px-2 py-1.5 rounded"
             onClick={() =>
               navigate("/", {
                 state: { locationData },

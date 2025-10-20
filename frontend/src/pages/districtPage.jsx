@@ -118,6 +118,7 @@ export default function DistrictContent({ locationData }) {
     const [activeTab, setActiveTab] = useState("state");
     const [activeSubTab, setActiveSubTab] = useState("civics");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    
     const [civicsStateResults, setCivicsStateResults] = useState([]);
     const [civicsCountyResults, setCivicsCountyResults] = useState([]);
     const [healthStateResults, setHealthStateResults] = useState([]);

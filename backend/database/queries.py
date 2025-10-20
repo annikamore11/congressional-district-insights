@@ -1,5 +1,6 @@
 from .supabase_client import supabase
 
+
 ## Supabase queries for Civics Data
 def aggregate_state_results(state_name: str):
     response = supabase.rpc("aggregate_state_results", { "state_name": state_name }).execute()
