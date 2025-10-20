@@ -6,7 +6,7 @@ from flask_cors import CORS
 from dotenv import load_dotenv
 from constants import STATE_FULL
 from database.queries import (
-    aggregate_state_results, fetch_county_results, 
+    fetch_election_state, fetch_election_county, 
     fetch_health_state, fetch_health_county, 
     fetch_demographics_state, fetch_demographics_county,
     fetch_education_state, fetch_education_county,
@@ -136,18 +136,18 @@ def api_top_contributors():
     return jsonify({"error": "No valid FEC results found for provided IDs"}), 404
 
 ## Retrieve Historical Election Trends 
-@app.route("/api/state/<state_name>")
-def get_state_results(state_name):
-    results = aggregate_state_results(state_name)
+@app.route("/api/election/state/<state_name>")
+def get_election_state_results(state_name):
+    results = fetch_election_state(state_name)
     return jsonify({
         "state": state_name,
         "results": results
     })
 
-@app.route("/api/county/<state_name>/<county>")
-def get_county_results(state_name, county):
+@app.route("/api/election/county/<state_name>/<county>")
+def get_election_county_results(state_name, county):
     print(county)
-    results = fetch_county_results(state_name, county)
+    results = fetch_election_county(state_name, county)
     return jsonify({
         "state": state_name,
         "county": county,

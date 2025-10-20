@@ -155,10 +155,10 @@ export default function DistrictContent({ locationData }) {
             try {
                 let resp;
                 if (activeTab === "state") {
-                    resp = await fetch(`${API_BASE}/api/state/${state_name}`);
+                    resp = await fetch(`${API_BASE}/api/election/state/${state_name}`);
                     
                 } else {
-                    resp = await fetch(`${API_BASE}/api/county/${state_name}/${county}`);
+                    resp = await fetch(`${API_BASE}/api/election/county/${state_name}/${county}`);
                 }
                 
                 const data = await resp.json();
