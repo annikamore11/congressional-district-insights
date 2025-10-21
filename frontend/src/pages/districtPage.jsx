@@ -94,6 +94,28 @@ function CollapsibleSources() {
                             Visit Site
                         </a>
                     </p>
+                    <p>
+                        • <strong>Campaign Finance:</strong> FEC.gov 
+                        <a 
+                            href="https://www.fec.gov" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>
+                    </p>
+                    <p>
+                        • <strong>Congressional Member Info:</strong> congress-legislators github repository
+                        <a 
+                            href="https://github.com/unitedstates/congress-legislators" 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-gray-600 underline hover:text-black ml-1"
+                        >
+                            Visit Site
+                        </a>
+                    </p>
                     <p className="text-[10px] text-gray-500 mt-2 italic">
                         All measures from the Census ACS represent 5-year rolling averages
                     </p>

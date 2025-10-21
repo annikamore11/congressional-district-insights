@@ -1,6 +1,5 @@
 import os
 import requests
-import yaml
 from flask import Flask, jsonify, request 
 from flask_cors import CORS
 from dotenv import load_dotenv
@@ -287,4 +286,4 @@ def get_economy_county_results(state_name, county):
         "results": results
     })
 if __name__ == "__main__":
-    app.run(debug=True, port=5001)
+    app.run(debug=True, port=5002)

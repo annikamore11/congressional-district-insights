@@ -12,7 +12,7 @@ import {
   useLocation,
 } from "react-router-dom";
 import AddressAutocomplete from "./components/AddressAutocomplete.jsx";
-import { issueCategories, organizations } from "./data/constants.js";
+import { issueCategories, organizations } from "./constants.js";
 import HomeContent from "./pages/homePage.jsx";
 import DistrictContent from "./pages/districtPage.jsx";
 
@@ -33,7 +33,7 @@ function DistrictOverview() {
 }
 
 export default function App() {
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5001";
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5002";
 
   const navigate = useNavigate();
   const location = useLocation();

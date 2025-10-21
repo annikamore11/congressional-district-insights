@@ -1,16 +1,84 @@
-# React + Vite
+# Frontend - District Insights and Congressional Finance App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React-based frontend for visualizing congressional campaign finance and district data with interactive geographic navigation.
 
-Currently, two official plugins are available:
+## Tech Stack
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+- **React.js** - UI framework
+- **Vite** - Build tool and dev server
+- **Tailwind CSS** - Styling
+- **Google Maps API** - Address autocomplete
 
-## React Compiler
+## Prerequisites
 
-The React Compiler is not enabled on this template. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+- Node.js (v16 or higher)
+- npm or yarn
+- Google API Key with Maps JavaScript API enabled
 
-## Expanding the ESLint configuration
+## Installation
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+1. **Navigate to frontend directory**
+   ```bash
+   cd frontend
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**
+   
+   Create a `.env` file in the frontend directory:
+   ```env
+   VITE_API_URL=http://localhost:5001
+   VITE_GOOGLE_API_KEY=your_google_api_key_here
+   ```
+
+## Getting API Keys
+
+### Google API Key
+1. Go to [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a new project or select existing one
+3. Enable **Maps JavaScript API**
+4. Go to **Credentials** → **Create Credentials** → **API Key**
+
+## Development
+
+Run the development server:
+
+```bash
+npm run dev
+```
+
+The app will be available at `http://localhost:5173` (or another port if 5173 is in use).
+
+## 📁 Project Structure
+
+```
+frontend/
+├── src/
+│   ├── components/      # React components
+│   │   ├── districtTabs/
+│   │   │   ├── CivicsTab.jsx
+│   │   │   ├── DemographicsTab.jsx
+│   │   │   ├── EconomyTab.jsx
+│   │   │   ├── EducationTab.jsx
+│   │   │   ├── HealthTab.jsx
+│   │   │   ├── RepCard.jsx      # Styling for representative cards
+│   │   │   └── StatCarousel.jsx # Card styling for mobile layout
+│   │   └── AddressAutoComplete.jsx     
+│   ├── pages/                      # Page components
+│   │   ├── districtPage.jsx        # District Insights
+│   │   └── homePage.jsx            # Campaign Finance 
+│   ├── App.jsx                     # Main app component
+│   ├── main.jsx                    # Entry point
+│   ├── constants.js             
+│   └── index.css 
+├── README.md      
+├── index.html          # HTML template
+├── vite.config.js      # Vite configuration
+├── package-lock.json
+├── package.json        
+└── .env                # Environment variables (create this)
+```
