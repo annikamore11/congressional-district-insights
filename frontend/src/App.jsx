@@ -108,15 +108,13 @@ export default function App() {
           const resp = await fetch('https://ipwho.is/');
           const data = await resp.json();
           
-          console.log('IP location data:', data);
-          
           if (data && data.success !== false && data.postal) {
             // Fetch location data using lat/lng
             const geocodeResp = await fetch(
               `${API_BASE}/api/geocode?q=${data.postal}`
             );
             const geocodeData = await geocodeResp.json();
-            console.log(geocodeData)
+
             if (geocodeData) {
               setLocationData(geocodeData);
               setZip(geocodeData.zip || data.postal || '');
