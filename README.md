@@ -139,7 +139,7 @@ FEC and congress-legislators data are fetched directly from their respective API
 
 - [Frontend Setup](./frontend/README.md)
 - [Backend Setup](./backend/README.md)
-- [Data Processing Guide](./data-processing/README.md)
+- [Data Processing Guide](./data_processing/README.md)
 
 ## FEC Notes
 ### Missing FEC Data

@@ -1,5 +1,6 @@
 from .supabase_client import supabase
 
+#### Supabase functions can be found in ./database_sql_functions.sql
 
 ## Supabase queries for Civics Data
 def fetch_election_state(state_name: str):
