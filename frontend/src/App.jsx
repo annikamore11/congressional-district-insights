@@ -12,12 +12,11 @@ import {
   useLocation,
 } from "react-router-dom";
 import AddressAutocomplete from "./components/AddressAutocomplete.jsx";
-import { issueCategories, organizations } from "./constants.js";
-import HomeContent from "./pages/homePage.jsx";
+import FECContent from "./pages/fecPage.jsx";
 import DistrictContent from "./pages/districtPage.jsx";
 
-function HomePage() {
-  return <HomeContent />;
+function FECPage() {
+  return <FECContent />;
 }
 
 function DistrictOverview() {
@@ -162,8 +161,7 @@ export default function App() {
         {/* Logo on the left */}
         <div className="flex-shrink-0">
           <p
-            className="text-s font-semibold text-white cursor-pointer"
-            onClick={() => navigate("/home")}
+            className="text-s font-semibold text-white"
           >
             eVotersUnited
           </p>
@@ -171,44 +169,7 @@ export default function App() {
 
         {/* Middle Nav - Centered */}
         <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-2">
-          {/* Issues Dropdown */}
-          <div className="relative group">
-            <button className="px-3 py-2 text-white hover:text-orange-600 transition-colors font-bold rounded">
-              Issues
-            </button>
-            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 p-4">
-              <ul className="grid grid-cols-5 gap-2">
-                {issueCategories.map((issue, idx) => (
-                  <li
-                    key={idx}
-                    className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-                  >
-                    {issue}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          {/* Organizations Dropdown */}
-          <div className="relative group">
-            <button className="px-3 py-2 font-bold text-white hover:text-orange-600 transition-colors rounded">
-              Organizations
-            </button>
-            <div className="absolute left-1/2 -translate-x-1/2 mt-2 w-[1000px] bg-gray-200 rounded shadow-lg invisible opacity-0 pointer-events-none group-hover:visible group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50 p-4">
-              <ul className="grid grid-cols-3 gap-2">
-                {organizations.map((org, idx) => (
-                  <li
-                    key={idx}
-                    className="hover:bg-gray-100 p-2 rounded cursor-pointer"
-                  >
-                    {org}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
+          
           {/* District Data Link */}
           <button 
             className="px-3 py-2 text-white hover:text-orange-600 transition-colors font-bold hover:underline rounded flex items-center gap-1"
@@ -219,6 +180,16 @@ export default function App() {
             }
           >
             District Data
+          </button>
+          
+          {/* FEC Data Link */}
+          <button 
+            className="px-3 py-2 text-white hover:text-orange-600 transition-colors font-bold hover:underline rounded flex items-center gap-1"
+            onClick={() =>
+              navigate("/fec")
+            }
+          >
+            Campaign Finance
           </button>
         </div>
 
@@ -288,7 +259,7 @@ export default function App() {
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto text-gray-600">
         <Routes>
-          <Route path="/home" element={<HomePage />} />
+          <Route path="/fec" element={<FECPage />} />
           <Route path="/" element={<DistrictOverview />} />
         </Routes>
       </main>

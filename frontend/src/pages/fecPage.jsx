@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import Chart from "chart.js/auto";
 
-export default function HomeContent() {
+export default function FECContent() {
   const [states, setStates] = useState([]);
   const [selectedState, setSelectedState] = useState("");
   const [members, setMembers] = useState([]);
