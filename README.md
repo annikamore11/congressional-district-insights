@@ -8,7 +8,7 @@ This application allows users to explore geographic data at both state and count
 
 ## Demo App
 
-https://egp-district-data.vercel.app/
+https://congressional-district-insights.vercel.app/
 
 ## Architecture
 
