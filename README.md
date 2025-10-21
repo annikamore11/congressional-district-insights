@@ -10,6 +10,8 @@ This application allows users to explore geographic data at both state and count
 
 https://congressional-district-insights.vercel.app/
 
+Takes a minute to initially load
+
 ## Architecture
 
 ```
