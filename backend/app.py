@@ -10,7 +10,7 @@ from database.queries import (
     fetch_demographics_state, fetch_demographics_county,
     fetch_education_state, fetch_education_county,
     fetch_economy_state, fetch_economy_county
-    )
+)
 from functions.fec_finance import (
     group_by_state, fetch_fec_totals,
     fetch_fec_state_totals, fetch_member_primary_committee,
@@ -24,6 +24,183 @@ GEOCODIO_KEY = os.getenv("GEOCODIO_KEY")
 app = Flask(__name__)
 CORS(app)
 
+# Mapping of category names to fetch functions
+STATE_FETCHERS = {
+    "civics": fetch_election_state,  
+    "health": fetch_health_state,
+    "demographics": fetch_demographics_state,
+    "education": fetch_education_state,
+    "economy": fetch_economy_state
+}
+
+COUNTY_FETCHERS = {
+    "civics": fetch_election_county,  
+    "health": fetch_health_county,
+    "demographics": fetch_demographics_county,
+    "education": fetch_education_county,
+    "economy": fetch_economy_county
+}
+
+VALID_CATEGORIES = ["civics", "health", "demographics", "education", "economy"]
+
+
+def get_state_full_name(state_abbr: str) -> str:
+    """Get full state name from abbreviation"""
+    return STATE_FULL.get(state_abbr, state_abbr)
+
+
+def fetch_category_data(category: str, geography_type: str, state_abbr: str, county: str = None):
+    """
+    Fetch data for a specific category and geography.
+    
+    NOTE: Database structure quirk - state-level rows use the 'county' column 
+    to store the full state name (e.g., state=ME, county=Maine).
+    County-level rows use it normally (e.g., state=ME, county=Cumberland).
+    
+    Args:
+        category: Data category (health, demographics, etc.)
+        geography_type: "state" or "county"
+        state_abbr: State abbreviation (e.g., "ME")
+        county: County name (for county requests) or full state name (for state requests)
+    
+    Returns:
+        List of results or empty list on error
+    """
+    fetchers = STATE_FETCHERS if geography_type == "state" else COUNTY_FETCHERS
+    fetch_func = fetchers.get(category)
+    
+    if not fetch_func:
+        return []
+    
+    try:
+        state_full = get_state_full_name(state_abbr)
+        
+        if geography_type == "state":
+            # State-level queries need different params based on category
+            if category in ["civics"]:
+                results = fetch_func(state_abbr)
+            else:
+                results = fetch_func(state_abbr, state_full)
+        else:
+            # County-level queries
+            results = fetch_func(state_abbr, county)
+        
+        return results
+    
+    except Exception as e:
+        print(f"Error fetching {category} data: {e}")
+        return []
+
+
+# ============================================
+# RESTFUL ENDPOINTS
+# ============================================
+
+@app.route("/api/state/<state_abbr>")
+def get_state_data(state_abbr):
+    """
+    Get state-level data for one or more categories.
+    
+    Query params:
+        category: Specific category (health, demographics, etc.) or "all"
+        categories: Comma-separated list (health,demographics,economy)
+    
+    Examples:
+        /api/state/ME?category=health
+        /api/state/ME?category=all
+        /api/state/ME?categories=health,demographics
+    """
+    state_abbr = state_abbr.upper()
+    
+    # Get requested category/categories
+    single_category = request.args.get("category")
+    multiple_categories = request.args.get("categories")
+    
+    # Default to all categories if none specified
+    if not single_category and not multiple_categories:
+        categories_to_fetch = VALID_CATEGORIES
+    elif single_category == "all":
+        categories_to_fetch = VALID_CATEGORIES
+    elif multiple_categories:
+        categories_to_fetch = [c.strip() for c in multiple_categories.split(",")]
+    else:
+        categories_to_fetch = [single_category]
+    
+    # Validate categories
+    invalid = [c for c in categories_to_fetch if c not in VALID_CATEGORIES]
+    if invalid:
+        return jsonify({
+            "error": f"Invalid categories: {', '.join(invalid)}",
+            "valid_categories": VALID_CATEGORIES
+        }), 400
+    
+    # Fetch data for each category
+    data = {}
+    for category in categories_to_fetch:
+        result = fetch_category_data(category, "state", state_abbr)
+        data[category] = result
+    
+    return jsonify({
+        "state": state_abbr,
+        "state_full": get_state_full_name(state_abbr),
+        "data": data
+    })
+
+
+@app.route("/api/county/<state_abbr>/<county>")
+def get_county_data(state_abbr, county):
+    """
+    Get county-level data for one or more categories.
+    
+    Query params:
+        category: Specific category or "all"
+        categories: Comma-separated list
+    
+    Examples:
+        /api/county/ME/York?category=health
+        /api/county/ME/York?category=all
+        /api/county/ME/York?categories=health,demographics
+    """
+    state_abbr = state_abbr.upper()
+    
+    # Get requested category/categories
+    single_category = request.args.get("category")
+    multiple_categories = request.args.get("categories")
+    
+    # Default to all categories if none specified
+    if not single_category and not multiple_categories:
+        categories_to_fetch = VALID_CATEGORIES
+    elif single_category == "all":
+        categories_to_fetch = VALID_CATEGORIES
+    elif multiple_categories:
+        categories_to_fetch = [c.strip() for c in multiple_categories.split(",")]
+    else:
+        categories_to_fetch = [single_category]
+    
+    # Validate categories
+    invalid = [c for c in categories_to_fetch if c not in VALID_CATEGORIES]
+    if invalid:
+        return jsonify({
+            "error": f"Invalid categories: {', '.join(invalid)}",
+            "valid_categories": VALID_CATEGORIES
+        }), 400
+    
+    # Fetch data for each category
+    data = {}
+    for category in categories_to_fetch:
+        result = fetch_category_data(category, "county", state_abbr, county)
+        data[category] = result
+    
+    return jsonify({
+        "state": state_abbr,
+        "state_full": get_state_full_name(state_abbr),
+        "county": county,
+        "data": data
+    })
+
+
+
+
 # Endpoint to list states
 @app.route("/api/states")
 def api_states():
@@ -31,14 +208,14 @@ def api_states():
     return jsonify(sorted(list(states.keys())))
 
 # Endpoint to list members for selected state
-@app.route("/api/members/<state>")
+@app.route("/api/member/<state>")
 def api_members(state):
     states = group_by_state()
     members = states.get(state.upper(), [])
     return jsonify(members)
 
 # Endpoint to return the totals from fetch_fec_totals function
-@app.route("/api/member_fec", methods=["POST"])
+@app.route("/api/member/fec_totals", methods=["POST"])
 def api_member_fec():
     payload = request.get_json() or {}
     fec_ids = payload.get("fec_ids", [])
@@ -46,7 +223,6 @@ def api_member_fec():
     if not fec_ids:
         return jsonify({"error": "No FEC IDs provided"}), 400
     
-
     out = {"by_fec_id": [], "aggregated": {"cash_on_hand": 0, "debts": 0, "receipts": 0, "disbursements": 0, "large_contributions": 0, "small_contributions": 0, 
                                            "PAC_contributions": 0, "candidate_contributions": 0, "other_contributions": 0}}
     for fid in fec_ids:
@@ -65,12 +241,11 @@ def api_member_fec():
             out["aggregated"]["PAC_contributions"] += res["PAC_contributions"]
             out["aggregated"]["candidate_contributions"] += res["candidate_contributions"]
             out["aggregated"]["other_contributions"] += res["other_contributions"]
-            
     
     return jsonify(out)
 
 # Endpoint to return the top state totals from the fetch_fec_state_totals function
-@app.route("/api/member_fec_state_top5", methods=["POST"])
+@app.route("/api/member/fec_state_top5", methods=["POST"])
 def api_member_fec_state_top5():
     payload = request.get_json() or {}
     fec_ids = payload.get("fec_ids", [])
@@ -79,7 +254,6 @@ def api_member_fec_state_top5():
     if not fec_ids:
         return jsonify({"error": "No FEC IDs provided"}), 400
 
-    # Try each FEC ID until one returns results
     for fid in fec_ids:
         fid = fid.strip()
         if not fid:
@@ -87,20 +261,17 @@ def api_member_fec_state_top5():
 
         results = fetch_fec_state_totals(fid, cycle)
 
-        # Skip if it errored or returned nothing
         if isinstance(results, dict) and "error" in results:
             continue
         if not results:
             continue
 
-        # Return the first valid FEC ID's top 5 states
         return jsonify({"fec_id": fid, "cycle": cycle, "state_totals": results})
 
     return jsonify({"error": "No valid FEC results found for provided IDs"}), 404
 
-
-# Endpoint to return the top individual contributors from the fetch_top_contributors function
-@app.route("/api/top_contributors", methods=["POST"])
+# Endpoint to return the top individual contributors
+@app.route("/api/member/top_contributors", methods=["POST"])
 def api_top_contributors():
     payload = request.get_json() or {}
     fec_ids = payload.get("fec_ids", [])
@@ -114,7 +285,6 @@ def api_top_contributors():
         if not fid:
             continue
         
-        # Get primary committee id 
         committee_id = fetch_member_primary_committee(fid, cycle)
        
         if isinstance(committee_id, dict) and "error" in committee_id:
@@ -122,7 +292,6 @@ def api_top_contributors():
         if not committee_id:
             continue
         
-        # get top contributors for primary committee
         results = fetch_fec_top_contributors(committee_id, cycle)
         
         if isinstance(results, dict) and "error" in results:
@@ -134,30 +303,10 @@ def api_top_contributors():
 
     return jsonify({"error": "No valid FEC results found for provided IDs"}), 404
 
-## Retrieve Historical Election Trends 
-@app.route("/api/election/state/<state_name>")
-def get_election_state_results(state_name):
-    results = fetch_election_state(state_name)
-    return jsonify({
-        "state": state_name,
-        "results": results
-    })
-
-@app.route("/api/election/county/<state_name>/<county>")
-def get_election_county_results(state_name, county):
-    print(county)
-    results = fetch_election_county(state_name, county)
-    return jsonify({
-        "state": state_name,
-        "county": county,
-        "results": results
-    })
-
-
 @app.route("/api/geocode")
 def geocode():
     """Geocode address/ZIP or reverse geocode lat/lng using Geocodio"""
-    query = request.args.get("q")  # Address or ZIP
+    query = request.args.get("q")
     lat = request.args.get("lat")
     lng = request.args.get("lng")
     
@@ -165,12 +314,9 @@ def geocode():
         return jsonify({"error": "Missing query or lat/lng parameters"}), 400
     
     try:
-        # Determine if this is forward geocoding or reverse geocoding
         if query:
-            # Forward geocoding (address or ZIP)
             url = f"https://api.geocod.io/v1.9/geocode?q={query}&fields=cd&api_key={GEOCODIO_KEY}"
         else:
-            # Reverse geocoding (lat/lng)
             url = f"https://api.geocod.io/v1.9/reverse?q={lat},{lng}&fields=cd&api_key={GEOCODIO_KEY}"
         
         resp = requests.get(url, timeout=10)
@@ -182,7 +328,6 @@ def geocode():
             components = result["address_components"]
             cd_fields = result.get("fields", {}).get("congressional_districts", [])
             
-            # Extract legislators if available
             legislators = []
             if cd_fields:
                 for leg in cd_fields[0].get("current_legislators", []):
@@ -214,76 +359,5 @@ def geocode():
         traceback.print_exc()
         return jsonify({"error": str(e)}), 500
 
-## Retrieve County Health Ratings Data
-@app.route("/api/health/state/<state_full>/<state_name>")
-def get_health_state_results(state_full, state_name):
-    results = fetch_health_state(state_full, state_name)
-    return jsonify({
-        "state": state_name,
-        "results": results
-    })
-
-@app.route("/api/health/county/<state_name>/<county>")
-def get_health_county_results(state_name, county):
-    results = fetch_health_county(state_name, county)
-    return jsonify({
-        "state": state_name,
-        "county": county,
-        "results": results
-    })
-
-## Retrieve Census Data 
-@app.route("/api/demographics/state/<state_full>/<state_name>")
-def get_demographics_state_results(state_full, state_name):
-    results = fetch_demographics_state(state_full, state_name)
-    return jsonify({
-        "state": state_name,
-        "results": results
-    })
-
-@app.route("/api/demographics/county/<state_name>/<county>")
-def get_demographics_county_results(state_name, county):
-    results = fetch_demographics_county(state_name, county)
-    return jsonify({
-        "state": state_name,
-        "county": county,
-        "results": results
-    })
-
-## Retrieve Education Data 
-@app.route("/api/education/state/<state_full>/<state_name>")
-def get_education_state_results(state_full, state_name):
-    results = fetch_education_state(state_full, state_name)
-    return jsonify({
-        "state": state_name,
-        "results": results
-    })
-
-@app.route("/api/education/county/<state_name>/<county>")
-def get_education_county_results(state_name, county):
-    results = fetch_education_county(state_name, county)
-    return jsonify({
-        "state": state_name,
-        "county": county,
-        "results": results
-    })
-
-# Retrieve Economy Data 
-@app.route("/api/economy/state/<state_full>/<state_name>")
-def get_economy_state_results(state_full, state_name):
-    results = fetch_economy_state(state_full, state_name)
-    return jsonify({
-        "state": state_name,
-        "results": results
-    })
-
-@app.route("/api/economy/county/<state_name>/<county>")
-def get_economy_county_results(state_name, county):
-    results = fetch_economy_county(state_name, county)
-    return jsonify({
-        "state": state_name,
-        "county": county,
-        "results": results
-    })
 if __name__ == "__main__":
     app.run(debug=True, port=5002)

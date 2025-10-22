@@ -126,7 +126,7 @@ function CollapsibleSources() {
 }
 
 export default function DistrictContent({ locationData }) {
-    const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5001";
+    const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5002";
 
     if (!locationData) {
         return (
@@ -140,19 +140,27 @@ export default function DistrictContent({ locationData }) {
     const [activeTab, setActiveTab] = useState("state");
     const [activeSubTab, setActiveSubTab] = useState("civics");
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [loading, setLoading] = useState(false);
     
-    const [civicsStateResults, setCivicsStateResults] = useState([]);
-    const [civicsCountyResults, setCivicsCountyResults] = useState([]);
-    const [healthStateResults, setHealthStateResults] = useState([]);
-    const [healthCountyResults, setHealthCountyResults] = useState([]);
-    const [demograpicsStateResults, setDemographicsStateResults] = useState([]);
-    const [demographicsCountyResults, setDemographicsCountyResults] = useState([]);
-    const [educationStateResults, setEducationStateResults] = useState([]);
-    const [educationCountyResults, setEducationCountyResults] = useState([]);
-    const [economyStateResults, setEconomyStateResults] = useState([]);
-    const [economyCountyResults, setEconomyCountyResults] = useState([]);
+    // Store all data in a single state object
+    const [allData, setAllData] = useState({
+        state: {
+            civics: [],
+            health: [],
+            demographics: [],
+            education: [],
+            economy: []
+        },
+        county: {
+            civics: [],
+            health: [],
+            demographics: [],
+            education: [],
+            economy: []
+        }
+    });
 
-    const state_name = locationData.state;
+    const state_abbr = locationData.state;
     const state_full = locationData.state_full;
     const members = locationData.legislators;
     const county = locationData.county;
@@ -165,160 +173,48 @@ export default function DistrictContent({ locationData }) {
         ? senators.map(s => s.bio_id)
         : members.map(m => m.bio_id);
 
-    const currentCivicsData = activeTab === "state" ? civicsStateResults : civicsCountyResults;
-    const currentHealthData = activeTab === "state" ? healthStateResults : healthCountyResults;
-    const currentDemographicsData = activeTab === "state" ? demograpicsStateResults : demographicsCountyResults;
-    const currentEducationData = activeTab === "state" ? educationStateResults : educationCountyResults;
-    const currentEconomyData = activeTab === "state" ? economyStateResults : economyCountyResults;
+    // Get current data based on active tab
+    const currentData = allData[activeTab];
 
-    // Fetch election results (state or county based on activeTab)
+    // Fetch all data in a single request when tab changes
     useEffect(() => {
-        async function fetchElectionResults() {
+        async function fetchAllCategoryData() {
+            if (!state_abbr) return;
+            if (activeTab === "county" && !county) return;
+            
+            setLoading(true);
+            
             try {
-                let resp;
-                if (activeTab === "state") {
-                    resp = await fetch(`${API_BASE}/api/election/state/${state_name}`);
-                    
-                } else {
-                    resp = await fetch(`${API_BASE}/api/election/county/${state_name}/${county}`);
-                }
+                // Build the API URL based on active tab
+                const url = activeTab === "state"
+                    ? `${API_BASE}/api/state/${state_abbr}?category=all`
+                    : `${API_BASE}/api/county/${state_abbr}/${county}?category=all`;
                 
-                const data = await resp.json();
-                if (data.results) {
-                    if (activeTab === "state") {
-                        setCivicsStateResults(data.results);
-                        
-                    } else {
-                        setCivicsCountyResults(data.results);
-                    }
+                const resp = await fetch(url);
+                const result = await resp.json();  
+                
+                if (result.data) {
+                    // Update the state with all the data at once
+                    setAllData(prev => ({
+                        ...prev,
+                        [activeTab]: {
+                            civics: result.data.civics || result.data.election || [],
+                            health: result.data.health || [],
+                            demographics: result.data.demographics || [],
+                            education: result.data.education || [],
+                            economy: result.data.economy || []
+                        }
+                    }));
                 }
             } catch (err) {
-                console.error("Failed to fetch election results:", err);
+                console.error(`Failed to fetch ${activeTab} data:`, err);
+            } finally {
+                setLoading(false);
             }
         }
 
-        if (state_name && (activeTab === "state" || (activeTab === "county" && county))) {
-            fetchElectionResults();
-        }
-    }, [state_name, county, activeTab]);
-
-    // Fetch county health ratings data for use in the health tab
-    useEffect(() => {
-        async function fetchHealthData() {
-            try {
-                let resp;
-                if (activeTab === "state") {
-                    resp = await fetch(`${API_BASE}/api/health/state/${state_full}/${state_name}`);
-                } else {
-                    resp = await fetch(`${API_BASE}/api/health/county/${state_name}/${county}`);
-                }
-                
-                const data = await resp.json();
-                if (data.results) {
-                    if (activeTab === "state") {
-                        setHealthStateResults(data.results);
-                    } else {
-                        setHealthCountyResults(data.results);
-                    }
-                }
-            } catch (err) {
-                console.error("Failed to fetch health data results:", err);
-            }
-        }
-
-        if (state_name && (activeTab === "state" || (activeTab === "county" && county))) {
-            fetchHealthData();
-        }
-    }, [state_name, county, activeTab]);
-
-    // Fetch county health ratings data for use in the health tab
-    useEffect(() => {
-        async function fetchDemographicsData() {
-            try {
-                let resp;
-                if (activeTab === "state") {
-                    resp = await fetch(`${API_BASE}/api/demographics/state/${state_full}/${state_name}`);
-                } else {
-                    resp = await fetch(`${API_BASE}/api/demographics/county/${state_name}/${county}`);
-                }
-                
-                const data = await resp.json();
-                if (data.results) {
-                    if (activeTab === "state") {
-                        setDemographicsStateResults(data.results);
-                    } else {
-                        setDemographicsCountyResults(data.results);
-                    }
-                }
-            } catch (err) {
-                console.error("Failed to fetch demographics data results:", err);
-            }
-        }
-
-        if (state_name && (activeTab === "state" || (activeTab === "county" && county))) {
-            fetchDemographicsData();
-        }
-    }, [state_name, county, activeTab]);
-
-    // Fetch county health ratings data for use in the health tab
-    useEffect(() => {
-        async function fetchEducationData() {
-            try {
-                let resp;
-                if (activeTab === "state") {
-                    resp = await fetch(`${API_BASE}/api/education/state/${state_full}/${state_name}`);
-                } else {
-                    resp = await fetch(`${API_BASE}/api/education/county/${state_name}/${county}`);
-                }
-                
-                const data = await resp.json();
-                if (data.results) {
-                    if (activeTab === "state") {
-                        setEducationStateResults(data.results);
-                    } else {
-                        setEducationCountyResults(data.results);
-                    }
-                }
-            } catch (err) {
-                console.error("Failed to fetch education data results:", err);
-            }
-        }
-
-        if (state_name && (activeTab === "state" || (activeTab === "county" && county))) {
-            fetchEducationData();
-        }
-    }, [state_name, county, activeTab]);
-
-    // Fetch census data for economy tab
-    useEffect(() => {
-        async function fetchEconomyData() {
-            try {
-                let resp;
-                if (activeTab === "state") {
-                    resp = await fetch(`${API_BASE}/api/economy/state/${state_full}/${state_name}`);
-                } else {
-                    resp = await fetch(`${API_BASE}/api/economy/county/${state_name}/${county}`);
-                }
-                
-                const data = await resp.json();
-                if (data.results) {
-                    if (activeTab === "state") {
-                        setEconomyStateResults(data.results);
-                    } else {
-                        setEconomyCountyResults(data.results);
-                    }
-                }
-            } catch (err) {
-                console.error("Failed to fetch economy data results:", err);
-            }
-        }
-
-        if (state_name && (activeTab === "state" || (activeTab === "county" && county))) {
-            fetchEconomyData();
-        }
-    }, [state_name, county, activeTab]);
-
-
+        fetchAllCategoryData();
+    }, [state_abbr, county, activeTab, API_BASE]);
 
     return (
         <div className="flex h-full relative">
@@ -418,40 +314,37 @@ export default function DistrictContent({ locationData }) {
                     </div>
                 </div>
 
-                    {showAccuracyBanner && (
-                        <div className="bg-yellow-50 border-b border-yellow-200 p-3">
-                            <div className="max-w-6xl mx-auto flex items-start gap-3">
-                                <div className="flex-shrink-0 mt-0.5">
-                                    <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
-                                        <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                                    </svg>
-                                </div>
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-yellow-800">
-                                        <span className="font-medium">District or representative look wrong?</span> ZIP codes can span multiple districts. Use the{' '}
-                                        <span className="inline-flex items-center gap-1 font-semibold">
-                                            <MapPin size={12} className="inline" /> address input
-                                        </span>{' '}
-                                        in the header above for better accuracy.
-                                    </p>
-                                </div>
-                                <button 
-                                    onClick={() => setShowAccuracyBanner(false)}
-                                    className="flex-shrink-0 text-yellow-600 hover:text-yellow-800"
-                                >
-                                    <X size={18} />
-                                </button>
+                {showAccuracyBanner && (
+                    <div className="bg-yellow-50 border-b border-yellow-200 p-3">
+                        <div className="max-w-6xl mx-auto flex items-start gap-3">
+                            <div className="flex-shrink-0 mt-0.5">
+                                <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                                </svg>
                             </div>
+                            <div className="flex-1 min-w-0">
+                                <p className="text-sm text-yellow-800">
+                                    <span className="font-medium">District or representative look wrong?</span> ZIP codes can span multiple districts. Use the{' '}
+                                    <span className="inline-flex items-center gap-1 font-semibold">
+                                        <MapPin size={12} className="inline" /> address input
+                                    </span>{' '}
+                                    in the header above for better accuracy.
+                                </p>
+                            </div>
+                            <button 
+                                onClick={() => setShowAccuracyBanner(false)}
+                                className="flex-shrink-0 text-yellow-600 hover:text-yellow-800"
+                            >
+                                <X size={18} />
+                            </button>
                         </div>
-                    )}
-
-
-
+                    </div>
+                )}
 
                 {/* Content Area */}
                 <div className="flex-1 overflow-y-auto bg-gray-50">
                     <div className="max-w-6xl mx-auto p-4 sm:p-6">
-                        {/* Sub-tabs with info icon */}
+                        {/* Sub-tabs */}
                         <div className="flex flex-wrap sm:flex-nowrap gap-1 mb-6 bg-gray-200 rounded-lg p-1 relative">
                             {["civics", "demographics", "economy", "health", "education"].map((tab) => (
                                 <button
@@ -466,15 +359,25 @@ export default function DistrictContent({ locationData }) {
                                     {tab}
                                 </button>
                             ))}
-                            
                         </div>
 
+                        {/* Loading State */}
+                        {loading && (
+                            <div className="flex items-center justify-center py-12">
+                                <div className="text-gray-500">Loading data...</div>
+                            </div>
+                        )}
+
                         {/* Tab Content */}
-                        {activeSubTab === "civics" && <CivicsTab civicsData={currentCivicsData} />}
-                        {activeSubTab === "demographics" && <DemographicsTab demographicsData={currentDemographicsData} />}
-                        {activeSubTab === "economy" && <EconomyTab  economyData={currentEconomyData} />}
-                        {activeSubTab === "health" && <HealthTab healthData={currentHealthData} />}
-                        {activeSubTab === "education" && <EducationTab educationData={currentEducationData}/>}
+                        {!loading && (
+                            <>
+                                {activeSubTab === "civics" && <CivicsTab civicsData={currentData.civics} />}
+                                {activeSubTab === "demographics" && <DemographicsTab demographicsData={currentData.demographics} />}
+                                {activeSubTab === "economy" && <EconomyTab economyData={currentData.economy} />}
+                                {activeSubTab === "health" && <HealthTab healthData={currentData.health} />}
+                                {activeSubTab === "education" && <EducationTab educationData={currentData.education} />}
+                            </>
+                        )}
 
                         {/* Collapsible sources at bottom */}
                         <CollapsibleSources />

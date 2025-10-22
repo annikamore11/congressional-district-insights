@@ -58,7 +58,6 @@ STATE_FIPS = {
     "VI": "78"
 }
 
-# Add this mapping at the top of your file
 STATE_FULL = {
     'AL': 'Alabama', 'AK': 'Alaska', 'AZ': 'Arizona', 'AR': 'Arkansas',
     'CA': 'California', 'CO': 'Colorado', 'CT': 'Connecticut', 'DE': 'Delaware',

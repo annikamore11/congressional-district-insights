@@ -12,7 +12,7 @@ export default function FECContent() {
   const [stateTotalsChart, setStateTotalsChart] = useState(null);
   const [contributors, setContributors] = useState([]);
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5001";
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5002";
   
   useEffect(() => {
     fetch(`${API_BASE}/api/states`)
@@ -27,7 +27,7 @@ export default function FECContent() {
       setMembers([]);
       return;
     }
-    fetch(`${API_BASE}/api/members/${st}`)
+    fetch(`${API_BASE}/api/member/${st}`)
       .then((r) => r.json())
       .then((data) => setMembers(data));
   };
@@ -37,7 +37,7 @@ export default function FECContent() {
     setHasFecData(true);
 
     // Finance totals and contribution breakdown
-    const resp = await fetch(`${API_BASE}/api/member_fec`, {
+    const resp = await fetch(`${API_BASE}/api/member/fec_totals`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fec_ids: m.fec_ids }),
@@ -56,7 +56,7 @@ export default function FECContent() {
     }
 
     // Top State Contributors
-    const respState = await fetch(`${API_BASE}/api/member_fec_state_top5`, {
+    const respState = await fetch(`${API_BASE}/api/member/fec_state_top5`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fec_ids: m.fec_ids }),
@@ -64,7 +64,7 @@ export default function FECContent() {
     const dataState = await respState.json();
 
     // Top individual campaign committee contributors
-    const respCont = await fetch(`${API_BASE}/api/top_contributors`, {
+    const respCont = await fetch(`${API_BASE}/api/member/top_contributors`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ fec_ids: m.fec_ids }),
