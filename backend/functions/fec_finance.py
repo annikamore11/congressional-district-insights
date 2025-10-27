@@ -42,31 +42,16 @@ def load_legislators():
     _cache["legislators"] = folks
     return folks
 
-# Group legislators by state 
-def group_by_state():
-    if _cache["states"] is not None:
-        return _cache["states"]
+# Get the fec id for a member from geocodio (fec id not included in returned json)
+def get_member_fec(bio_id):
     folks = load_legislators()
-    states = {}
+    member_fec_ids = []
     for person in folks:
-        terms = person.get("terms", [])
-        if not terms:
-            continue
-        latest = terms[-1]
-        state = latest.get("state")
-        role = latest.get("type")  
-        if not state:
-            continue
-        entry = {
-            "name": f"{person.get('name', {}).get('first','')} {person.get('name', {}).get('last','')}".strip(),
-            "role": role,
-            "party": latest.get("party"),
-            "bio_id": person.get("id", {}).get("bioguide"),
-            "fec_ids": person.get("id", {}).get("fec", []) or []
-        }
-        states.setdefault(state.upper(), []).append(entry)
-    _cache["states"] = states
-    return states
+        if person.get("id", {}).get("bioguide") == bio_id:
+            fec_ids = person.get("id", {}).get("fec", [])
+            if fec_ids:  
+                member_fec_ids.extend(fec_ids)
+    return member_fec_ids
 
 # Function to get cash, debts, raised, and spent for members to create finance overview bar chart
 def fetch_fec_totals(fec_id, cycle=2024):

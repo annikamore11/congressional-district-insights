@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
-import { useLocation as useRouterLocation } from "react-router-dom";
 import {
   MapPinHouse,
   MapPin,
+  Menu,
+  X,
+  Users
 } from "lucide-react";
 import {
   BrowserRouter as Router,
@@ -12,20 +14,41 @@ import {
   useLocation,
 } from "react-router-dom";
 import AddressAutocomplete from "./components/AddressAutocomplete.jsx";
-import FECContent from "./pages/fecPage.jsx";
+import NavButton from "./components/navButton.jsx";
+import LandingContent from "./pages/landingPage.jsx";
 import DistrictContent from "./pages/districtPage.jsx";
+import RepresentativesPage from "./pages/repPage.jsx";
+
+function LandingPage( {locationData} ) {
+  return (
+    <LandingContent 
+      locationData={locationData}
+    />
+  );
+}
 
 function FECPage() {
   return <FECContent />;
 }
 
 function DistrictOverview() {
-  const location = useRouterLocation();
+  const location = useLocation();
   const { locationData } = location.state || {};
 
   return (
     <DistrictContent 
       key={`${locationData}`} // Forces re-mount on change
+      locationData={locationData}
+    />
+  );
+}
+
+function RepPage() {
+  const location = useLocation();
+  const { locationData } = location.state || {};
+
+  return (
+    <RepresentativesPage
       locationData={locationData}
     />
   );
@@ -40,6 +63,7 @@ export default function App() {
   const [zip, setZip] = useState("");
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
   const [addressMode, setAddressMode] = useState('zip'); 
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   
   // Fetch location based on ZIP code
@@ -56,10 +80,14 @@ export default function App() {
           setZip(data.zip);
           
           if (location.pathname === '/') {
-            navigate("/", {
-              state: { 
-                locationData: data
-              },
+            navigate("/district-insights", {
+              state: { locationData: data },
+              replace: true
+            });
+          } else if (location.pathname === '/representatives' || location.pathname === '/district-insights') {
+            // ✅ Re-navigate to current page with new data
+            navigate(location.pathname, {
+              state: { locationData: data },
               replace: true
             });
           }
@@ -85,10 +113,14 @@ export default function App() {
           setZip(data.zip);
           
           if (location.pathname === '/') {
-            navigate("/", {
-              state: { 
-                locationData: data
-              },
+            navigate("/district-insights", {
+              state: { locationData: data },
+              replace: true
+            });
+          } else if (location.pathname === '/representatives' || location.pathname === '/district-insights') {
+            // ✅ Re-navigate to current page with new data
+            navigate(location.pathname, {
+              state: { locationData: data },
               replace: true
             });
           }
@@ -117,16 +149,6 @@ export default function App() {
             if (geocodeData) {
               setLocationData(geocodeData);
               setZip(geocodeData.zip || data.postal || '');
-              
-              // NEW: Automatically navigate to district page with data
-              if (location.pathname === '/') {
-                navigate("/", {
-                  state: { 
-                    locationData: geocodeData
-                  },
-                  replace: true
-                });
-              }
             }
           }
         } catch (err) {
@@ -135,6 +157,7 @@ export default function App() {
         }
         fetchLocation();
     }, [API_BASE]);
+    
 
     // Handle ZIP code change with debounce
     const handleZipChange = (e) => {
@@ -155,46 +178,23 @@ export default function App() {
     };
 
   return (
-    <div className="h-screen w-screen flex flex-col">
+    <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-slate-500 to-slate-700 pt-2">
       {/* Header */}
-      <header className="flex items-center p-4 bg-gray-800 shadow z-50 justify-between">
+      <header className="flex items-center p-6 px-20 z-50 justify-between">
         {/* Logo on the left */}
         <div className="flex-shrink-0">
           <p
-            className="text-s font-semibold text-white"
+            className="text-md font-semibold text-slate-100 cursor-pointer"
+            onClick={() =>
+              navigate("/")
+            }
           >
-            eVotersUnited
+            CivicLens
           </p>
         </div>
 
-        {/* Middle Nav - Centered */}
-        <div className="hidden md:flex absolute left-1/2 transform -translate-x-1/2 space-x-2">
-          
-          {/* District Data Link */}
-          <button 
-            className="px-3 py-2 text-white hover:text-orange-600 transition-colors font-bold hover:underline rounded flex items-center gap-1"
-            onClick={() =>
-              navigate("/", {
-                state: { locationData },
-              })
-            }
-          >
-            District Data
-          </button>
-          
-          {/* FEC Data Link */}
-          <button 
-            className="px-3 py-2 text-white hover:text-orange-600 transition-colors font-bold hover:underline rounded flex items-center gap-1"
-            onClick={() =>
-              navigate("/fec")
-            }
-          >
-            Campaign Finance
-          </button>
-        </div>
-
         {/* Right side controls */}
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-4">
           {/* Enhanced Location Input with Toggle */}
           <div className="hidden md:block relative">
             {addressMode === 'zip' ? (
@@ -205,14 +205,14 @@ export default function App() {
                   onChange={handleZipChange}
                   onKeyPress={handleZipKeyPress}
                   placeholder="ZIP Code"
-                  className="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 px-3 py-1.5 rounded-l text-sm w-28 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                  className="border border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-slate-100 shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-28 focus:outline-none focus:ring-2 focus:ring-slate-800"
                 />
                 <button
                   onClick={() => setAddressMode('address')}
-                  className="bg-gray-700 border border-l-0 border-gray-600 text-gray-300 px-2 py-1.5 rounded-r text-xs hover:bg-gray-600 flex items-center"
+                  className="border border-l-0 border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-slate-100 shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-sm hover:bg-slate-400 flex items-center"
                   title="Use full address for better accuracy"
                 >
-                  <MapPin size={14} />
+                  <MapPin size={16} />
                 </button>
               </div>
             ) : (
@@ -225,7 +225,7 @@ export default function App() {
             )}
             {isLoadingLocation && (
               <div className="absolute right-10 top-1/2 -translate-y-1/2">
-                <div className="w-4 h-4 border-2 border-orange-500 border-t-transparent rounded-full animate-spin"></div>
+                <div className="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></div>
               </div>
             )}
           </div>
@@ -233,34 +233,91 @@ export default function App() {
           
 
           {/* Login Button */}
-          <button className="hidden sm:flex items-center text-white hover:text-orange-600 transition-colors px-3 py-1.5 rounded gap-1">
+          <button className="hidden sm:flex items-center text-slate-100 hover:text-slate-300 text-md transition-colors px-3 py-1.5 rounded gap-1">
             <span>Log In</span>
           </button>
 
           {/* Sign Up Button */}
-          <button className="hidden sm:flex items-center bg-orange-600 hover:bg-orange-700 text-white px-3 py-1.5 rounded gap-1 transition-colors">
+          <button className="hidden sm:flex items-center bg-slate-900 hover:bg-slate-400 shadow-sm shadow-slate-500/30 text-slate-100 text-md px-3 py-1.5 rounded gap-1 transition-colors">
             <span>Sign Up</span>
           </button>
 
-          {/* Mobile Menu Button */}
+          
+
+        {/* Sidebar Toggle Button */}
           <button 
-            className="md:hidden flex items-center text-white hover:text-orange-600 transition-colors px-2 py-1.5 rounded"
-            onClick={() =>
-              navigate("/", {
-                state: { locationData },
-              })
-            }
+            onClick={() => setSidebarOpen(!sidebarOpen)}
+            className="flex items-center text-white hover:text-slate-300 transition-colors px-2 py-1.5 rounded gap-2"
           >
-            <MapPinHouse className="w-4 h-4" />
+            <Menu size={25} />
           </button>
         </div>
       </header>
 
+      {/* Overlay */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black/70 z-40 transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Slides in from right */}
+      <nav className={`
+        fixed top-0 right-0 h-full w-80 bg-slate-800 border-l border-slate-700 z-50
+        transform transition-transform duration-300 ease-in-out shadow-2xl
+        ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
+      `}>
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between p-6 border-b border-slate-700">
+          <h2 className="text-white font-bold text-xl">Navigation</h2>
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        {/* Navigation Items */}
+        <div className="p-4 space-y-2">
+          <NavButton 
+            to="/representatives" 
+            icon={<Users size={20} />} 
+            label="Your Representatives"
+            locationData={locationData}
+            onClick={() => setSidebarOpen(false)}
+          />
+          <NavButton 
+            to="/district-insights" 
+            icon={<MapPin size={20} />} 
+            label="District Data"
+            locationData={locationData}
+            onClick={() => setSidebarOpen(false)}
+          />
+          {/* <NavButton 
+            to="/ai-overview" 
+            icon={<Sparkles size={20} />} 
+            label="AI Overview"
+            onClick={() => setSidebarOpen(false)}
+          /> */}
+        </div>
+
+        {/* Sidebar Footer (Optional) */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
+          <p className="text-slate-100 text-xs text-center">
+            CivicLens © 2025
+          </p>
+        </div>
+      </nav>
+
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto text-gray-600">
         <Routes>
+          <Route path="/" element={<LandingPage locationData={locationData} />} />
           <Route path="/fec" element={<FECPage />} />
-          <Route path="/" element={<DistrictOverview />} />
+          <Route path="/district-insights" element={<DistrictOverview />} />
+          <Route path="/representatives" element={<RepPage />} />
         </Routes>
       </main>
     </div>

@@ -105,7 +105,7 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
             setTimeout(() => setShowDropdown(false), 200);
           }}
           placeholder="Full address..."
-          className="border border-gray-600 bg-gray-700 text-white placeholder-gray-400 px-3 py-1.5 rounded-l text-sm w-48 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          className="border border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-white shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-64 focus:outline-none focus:ring-2 focus:ring-slate-900"
           onKeyPress={(e) => {
             if (e.key === 'Enter' && value) {
               handleSelect(value);
@@ -114,7 +114,7 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
         />
         
         {showDropdown && suggestions.length > 0 && (
-          <ul className="absolute top-full left-0 w-[400px] mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto z-[100]">
+          <ul className="absolute top-full left-0 w-[400px] mt-1 bg-indigo-100 border border-slate-900 rounded-md shadow-lg max-h-60 overflow-auto z-[100]">
             {suggestions.map((suggestion, idx) => (
               <li
                 key={idx}
@@ -122,7 +122,7 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
                   e.preventDefault();
                   handleSelect(suggestion);
                 }}
-                className="px-3 py-2 hover:bg-gray-100 cursor-pointer text-sm text-gray-800 border-b border-gray-100 last:border-b-0"
+                className="px-3 py-2 hover:bg-indigo-200 cursor-pointer text-sm text-slate-800 border-b border-indigo-100 last:border-b-0"
               >
                 {suggestion}
               </li>
@@ -139,10 +139,10 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
       
       <button
         onClick={onCancel}
-        className="bg-gray-700 border border-l-0 border-gray-600 text-gray-300 px-2 py-1.5 rounded-r text-xs hover:bg-gray-600 flex items-center"
+        className="border border-l-0 border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-white shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-xs hover:bg-gray-600 flex items-center"
         title="Switch to ZIP code"
       >
-        <X size={14} />
+        <X size={16} />
       </button>
     </div>
   );

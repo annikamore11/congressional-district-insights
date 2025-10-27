@@ -1,11 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { Menu, X, ChevronDown, ChevronUp, MapPin } from "lucide-react";
+import { X, ChevronDown, ChevronUp, MapPin } from "lucide-react";
 import CivicsTab from "../components/districtTabs/CivicsTab";
 import DemographicsTab from "../components/districtTabs/DemographicsTab";
 import EconomyTab from "../components/districtTabs/EconomyTab";
 import HealthTab from "../components/districtTabs/HealthTab";
 import EducationTab from "../components/districtTabs/EducationTab";
-import RepCard from "../components/districtTabs/RepCard";
 
 // Collapsible sources component
 function CollapsibleSources() {
@@ -162,16 +161,8 @@ export default function DistrictContent({ locationData }) {
 
     const state_abbr = locationData.state;
     const state_full = locationData.state_full;
-    const members = locationData.legislators;
     const county = locationData.county;
 
-    const senators = members.filter(m => m.role === "sen");
-    const houseReps = members.filter(m => m.role === "rep");
-
-    // Determine which reps to highlight based on active tab
-    const highlightedReps = activeTab === "state" 
-        ? senators.map(s => s.bio_id)
-        : members.map(m => m.bio_id);
 
     // Get current data based on active tab
     const currentData = allData[activeTab];
@@ -218,112 +209,50 @@ export default function DistrictContent({ locationData }) {
 
     return (
         <div className="flex h-full relative">
-            {/* Mobile Menu Button */}
-            {!sidebarOpen && (
-                <button
-                    onClick={() => setSidebarOpen(true)}
-                    className="lg:hidden fixed top-19 left-4 z-50 p-2 bg-gray-800 text-white rounded-lg shadow-lg"
-                >
-                    <Menu size={24} />
-                </button>
-            )}
-
-            {/* Overlay for mobile */}
-            {sidebarOpen && (
-                <div
-                    className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-30"
-                    onClick={() => setSidebarOpen(false)}
-                />
-            )}
-
-            {/* Left Sidebar - Representatives */}
-            <div className={`
-                fixed lg:static inset-y-0 left-0 z-40
-                w-72 bg-gray-50 border-r border-gray-200 overflow-y-auto
-                transform transition-transform duration-300 ease-in-out
-                ${sidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-            `}>
-                <div className="p-4">
-                    <div className="flex items-center justify-between mb-3 lg:block">
-                        <h2 className="text-lg font-bold text-gray-800">Your Representatives</h2>
-                        <button
-                            onClick={() => setSidebarOpen(false)}
-                            className="lg:hidden p-1"
-                        >
-                            <X size={20} />
-                        </button>
-                    </div>
-                    
-                    {senators.length > 0 && (
-                        <div className="mb-4">
-                            <h3 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-                                U.S. Senators
-                            </h3>
-                            {senators.map(senator => (
-                                <RepCard
-                                    key={senator.bio_id}
-                                    member={senator}
-                                    isHighlighted={highlightedReps.includes(senator.bio_id)}
-                                />
-                            ))}
-                        </div>
-                    )}
-                    
-                    {houseReps.length > 0 && (
-                        <div>
-                            <h3 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">
-                                U.S. Representative
-                            </h3>
-                            {houseReps.map(rep => (
-                                <RepCard
-                                    key={rep.bio_id}
-                                    member={rep}
-                                    isHighlighted={highlightedReps.includes(rep.bio_id)}
-                                />
-                            ))}
-                        </div>
-                    )}
-                </div>
-            </div>
-            
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto">
-                {/* State/County Tabs */}
-                <div className="border-b border-gray-200 bg-white px-4 sm:px-6 mt-16 lg:mt-0">
-                    <div className="flex space-x-4 sm:space-x-8 overflow-x-auto">
+            <div className="flex-1 flex flex-col overflow-hidden w-full lg:w-auto bg-gradient-to-br from-slate-700 to-slate-950">
+                <div className=" border-b border-t border-slate-200 px-4 sm:px-6 pt-10 lg:pt-2">
+                    <div className="max-w-6xl mx-auto flex gap-8 px-8">
                         <button
                             onClick={() => setActiveTab("state")}
-                            className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                            className={`py-4 text-base font-semibold transition-all duration-200 relative ${
                                 activeTab === "state"
-                                    ? "border-orange-500 text-orange-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                    ? "text-slate-800 "
+                                    : "text-slate-100 hover:text-slate-300"
                             }`}
                         >
                             {state_full || "Your State"}
+                            {activeTab === "state" && (
+                                <span className="absolute bottom-0 left-0 right-0 h-1 bg-slate-800 rounded-t-full shadow-lg shadow-blue-500/50"></span>
+                            )}
                         </button>
                         <button
                             onClick={() => setActiveTab("county")}
-                            className={`py-4 px-1 border-b-2 font-medium text-sm whitespace-nowrap transition-colors ${
+                            className={`py-4 text-base font-semibold transition-all duration-200 relative ${
                                 activeTab === "county"
-                                    ? "border-orange-500 text-orange-600"
-                                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                                    ? "text-slate-800"
+                                    : "text-slate-100 hover:text-slate-300"
                             }`}
                         >
                             {county || "Your County"}
+                            {activeTab === "county" && (
+                                <span className="absolute bottom-0 left-0 right-0 h-1 bg-slate-800 rounded-t-full shadow-lg shadow-blue-500/50"></span>
+                            )}
                         </button>
                     </div>
                 </div>
+                
 
                 {showAccuracyBanner && (
-                    <div className="bg-yellow-50 border-b border-yellow-200 p-3">
+                    <div className="bg-red-50 border-b border-red-200 p-3">
                         <div className="max-w-6xl mx-auto flex items-start gap-3">
                             <div className="flex-shrink-0 mt-0.5">
-                                <svg className="h-5 w-5 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                                <svg className="h-5 w-5 text-red-600" fill="currentColor" viewBox="0 0 20 20">
                                     <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
                                 </svg>
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm text-yellow-800">
+                                <p className="text-sm text-red-800">
                                     <span className="font-medium">District or representative look wrong?</span> ZIP codes can span multiple districts. Use the{' '}
                                     <span className="inline-flex items-center gap-1 font-semibold">
                                         <MapPin size={12} className="inline" /> address input
@@ -333,7 +262,7 @@ export default function DistrictContent({ locationData }) {
                             </div>
                             <button 
                                 onClick={() => setShowAccuracyBanner(false)}
-                                className="flex-shrink-0 text-yellow-600 hover:text-yellow-800"
+                                className="flex-shrink-0 text-red-600 hover:text-red-800"
                             >
                                 <X size={18} />
                             </button>
@@ -342,18 +271,18 @@ export default function DistrictContent({ locationData }) {
                 )}
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto bg-gray-50">
+                <div className="flex-1 overflow-y-auto">
                     <div className="max-w-6xl mx-auto p-4 sm:p-6">
                         {/* Sub-tabs */}
-                        <div className="flex flex-wrap sm:flex-nowrap gap-1 mb-6 bg-gray-200 rounded-lg p-1 relative">
+                        <div className="flex flex-wrap sm:flex-nowrap gap-2 mb-6 bg-white/80 backdrop-blur-sm rounded-xl p-2 shadow-sm border border-blue-100/50">
                             {["civics", "demographics", "economy", "health", "education"].map((tab) => (
                                 <button
                                     key={tab}
                                     onClick={() => setActiveSubTab(tab)}
-                                    className={`flex-1 py-2 px-2 sm:px-4 rounded-md text-xs sm:text-sm font-medium transition-colors capitalize whitespace-nowrap ${
+                                    className={`flex-1 py-2.5 px-2 sm:px-4 rounded-lg text-xs sm:text-sm font-medium transition-all duration-200 capitalize whitespace-nowrap ${
                                         activeSubTab === tab
-                                            ? "bg-white text-gray-900 shadow"
-                                            : "text-gray-600 hover:text-gray-900"
+                                            ? "bg-gradient-to-r from-sky-600 to-sky-700 text-white shadow-lg shadow-blue-500/30"
+                                            : "text-gray-800 hover:text-sky-700 hover:bg-blue-50/50"
                                     }`}
                                 >
                                     {tab}
@@ -364,7 +293,10 @@ export default function DistrictContent({ locationData }) {
                         {/* Loading State */}
                         {loading && (
                             <div className="flex items-center justify-center py-12">
-                                <div className="text-gray-500">Loading data...</div>
+                                <div className="flex flex-col items-center gap-3">
+                                    <div className="w-8 h-8 border-3 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                                    <p className="text-gray-500 text-sm">Loading data...</p>
+                                </div>
                             </div>
                         )}
 

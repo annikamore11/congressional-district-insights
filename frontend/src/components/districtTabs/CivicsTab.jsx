@@ -78,15 +78,15 @@ export default function CivicsTab({ civicsData }) {
 
     // Color mapping for parties
     const partyColors = {
-        'Green': { stroke: '#10b981', gradient: 'colorGreen' },
-        'Libertarian': { stroke: '#fbbf24', gradient: 'colorLibertarian' },
+        'Green': { stroke: '#15803d', gradient: 'colorGreen' },
+        'Libertarian': { stroke: '#ca8a04', gradient: 'colorLibertarian' },
         'Other': { stroke: '#94a3b8', gradient: 'colorOther' }
     };
 
     return (
         <>
             {/* Presidential Election Results */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
+            <div className="bg-slate-100 rounded-lg shadow-md border border-blue-100/50 p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
                     Presidential Popular Vote Results
                 </h2>
@@ -99,20 +99,20 @@ export default function CivicsTab({ civicsData }) {
                         <AreaChart data={chartData}>
                             <defs>
                                 <linearGradient id="colorDem" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                                    <stop offset="5%" stopColor="#0369a1" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#0369a1" stopOpacity={0.1}/>
                                 </linearGradient>
                                 <linearGradient id="colorRep" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+                                    <stop offset="5%" stopColor="#b91c1c" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#b91c1c" stopOpacity={0.1}/>
                                 </linearGradient>
                                 <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                                    <stop offset="5%" stopColor="#15803d" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#15803d" stopOpacity={0.1}/>
                                 </linearGradient>
                                 <linearGradient id="colorLibertarian" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.1}/>
+                                    <stop offset="5%" stopColor="#ca8a04" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#ca8a04" stopOpacity={0.1}/>
                                 </linearGradient>
                                 <linearGradient id="colorOther" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
@@ -137,7 +137,7 @@ export default function CivicsTab({ civicsData }) {
                                 type="monotone" 
                                 dataKey="Democrat" 
                                 stackId="1"
-                                stroke="#3b82f6" 
+                                stroke="#0369a1" 
                                 fillOpacity={1}
                                 fill="url(#colorDem)" 
                             />
@@ -145,7 +145,7 @@ export default function CivicsTab({ civicsData }) {
                                 type="monotone" 
                                 dataKey="Republican" 
                                 stackId="1"
-                                stroke="#ef4444" 
+                                stroke="#b91c1c" 
                                 fillOpacity={1}
                                 fill="url(#colorRep)" 
                             />
@@ -222,17 +222,17 @@ function getTrend(chartData) {
 function StatCard({ title, value, subtitle, color }) {
     const getColor = () => {
         if (!color) return 'text-gray-900';
-        if (value === 'Democrat' || value === 'Lean D') return 'text-blue-600';
+        if (value === 'Democrat' || value === 'Lean D') return 'text-sky-600';
         if (value === 'Republican' || value === 'Lean R') return 'text-red-600';
         if (value === 'Competitive') return 'text-purple-600';
         return 'text-gray-900';
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
+        <div className="bg-slate-100 rounded-lg shadow-md border border-blue-100/50 p-4">
+            <h3 className="text-sm font-medium text-gray-700 mb-1">{title}</h3>
             <p className={`text-2xl font-bold ${getColor()}`}>{value}</p>
-            <p className="text-xs text-gray-500 mt-1">{subtitle}</p>
+            <p className="text-xs text-gray-700 mt-1">{subtitle}</p>
         </div>
     );
 }

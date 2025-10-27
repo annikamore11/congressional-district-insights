@@ -12,9 +12,9 @@ from database.queries import (
     fetch_economy_state, fetch_economy_county
 )
 from functions.fec_finance import (
-    group_by_state, fetch_fec_totals,
-    fetch_fec_state_totals, fetch_member_primary_committee,
-    fetch_fec_top_contributors
+    fetch_fec_totals, fetch_fec_state_totals, 
+    fetch_member_primary_committee,
+    fetch_fec_top_contributors, get_member_fec
 )
 
 # Load environment variables from .env
@@ -199,20 +199,11 @@ def get_county_data(state_abbr, county):
     })
 
 
-
-
-# Endpoint to list states
-@app.route("/api/states")
-def api_states():
-    states = group_by_state()
-    return jsonify(sorted(list(states.keys())))
-
-# Endpoint to list members for selected state
-@app.route("/api/member/<state>")
-def api_members(state):
-    states = group_by_state()
-    members = states.get(state.upper(), [])
-    return jsonify(members)
+# Endpoint to see if member has FEC data and to get fec ids
+@app.route("/api/member/<bio_id>")
+def api_member_fec_id(bio_id):
+    fec_ids = get_member_fec(bio_id)
+    return jsonify(fec_ids)
 
 # Endpoint to return the totals from fetch_fec_totals function
 @app.route("/api/member/fec_totals", methods=["POST"])
@@ -315,9 +306,9 @@ def geocode():
     
     try:
         if query:
-            url = f"https://api.geocod.io/v1.9/geocode?q={query}&fields=cd&api_key={GEOCODIO_KEY}"
+            url = f"https://api.geocod.io/v1.9/geocode?q={query}&fields=cd,stateleg,school&api_key={GEOCODIO_KEY}"
         else:
-            url = f"https://api.geocod.io/v1.9/reverse?q={lat},{lng}&fields=cd&api_key={GEOCODIO_KEY}"
+            url = f"https://api.geocod.io/v1.9/reverse?q={lat},{lng}&fields=cd,stateleg,school&api_key={GEOCODIO_KEY}"
         
         resp = requests.get(url, timeout=10)
         data = resp.json()
@@ -327,11 +318,14 @@ def geocode():
             location = result["location"]
             components = result["address_components"]
             cd_fields = result.get("fields", {}).get("congressional_districts", [])
+            state_house_fields = result.get("fields", {}).get("state_legislative_districts", {}).get("house", [])
+            state_senate_fields = result.get("fields", {}).get("state_legislative_districts", {}).get("senate", [])
+            sd_fields = result.get("fields", {}).get("school_districts", {}).get("unified", {})
             
-            legislators = []
+            fed_legislators = []
             if cd_fields:
                 for leg in cd_fields[0].get("current_legislators", []):
-                    legislators.append({
+                    fed_legislators.append({
                         "name": f"{leg['bio']['first_name']} {leg['bio']['last_name']}",
                         "role": "sen" if leg["type"] == "senator" else "rep",
                         "party": leg["bio"]["party"],
@@ -339,6 +333,35 @@ def geocode():
                         "photo_url": leg["bio"]["photo_url"],
                         "district": cd_fields[0].get("district_number") if leg["type"] == "representative" else None,
                         "phone": leg["contact"]["phone"],
+                        "website": leg["contact"]["url"]
+                    })
+            state_house_legislators = []
+            if state_house_fields:
+                for leg in state_house_fields[0].get("current_legislators", []):
+                    state_house_legislators.append({
+                        "name": f"{leg['bio']['first_name']} {leg['bio']['last_name']}",
+                        "role": "rep" if leg["type"] == "representative" else "tribal_rep",
+                        "party": leg["bio"]["party"],
+                        "openstates_id": leg["references"]["openstates_id"],
+                        "photo_url": leg["bio"]["photo_url"],
+                        "district": state_house_fields[0].get("name"),
+                        "phone": leg["contact"]["phone"],
+                        "email": leg["contact"].get("email"),
+                        "website": leg["contact"]["url"]
+                    })
+
+            state_senate_legislators = []
+            if state_senate_fields:
+                for leg in state_senate_fields[0].get("current_legislators", []):
+                    state_senate_legislators.append({
+                        "name": f"{leg['bio']['first_name']} {leg['bio']['last_name']}",
+                        "role": "sen" if leg["type"] == "senator" else "unknown",
+                        "party": leg["bio"]["party"],
+                        "openstates_id": leg["references"]["openstates_id"],
+                        "photo_url": leg["bio"]["photo_url"],
+                        "district": state_senate_fields[0].get("name"),
+                        "phone": leg["contact"]["phone"],
+                        "email": leg["contact"].get("email"),
                         "website": leg["contact"]["url"]
                     })
             
@@ -349,7 +372,11 @@ def geocode():
                 "state_full": STATE_FULL.get(components["state"], components["state"]),
                 "zip": components.get("zip"),
                 "county": components.get("county"),
-                "legislators": legislators
+                "city": components.get("city"),
+                "fed_legislators": fed_legislators,
+                "state_house_legislators": state_house_legislators,
+                "state_senate_legislators": state_senate_legislators,
+                "school_district": sd_fields.get("name") if sd_fields else None
             })
         
         return jsonify({"error": "No results found"}), 404
