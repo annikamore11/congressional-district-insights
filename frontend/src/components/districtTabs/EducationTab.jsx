@@ -135,9 +135,9 @@ export default function EducationTab({ educationData }) {
 
     if (!educationData || educationData.length === 0) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Education</h2>
-                <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="h-64 flex items-center justify-center text-gray-500">
                     Loading education data...
                 </div>
             </div>
@@ -146,9 +146,9 @@ export default function EducationTab({ educationData }) {
 
     if (!processedData) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Education</h2>
-                <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="h-64 flex items-center justify-center text-gray-500">
                     No education data available
                 </div>
             </div>
@@ -204,7 +204,7 @@ export default function EducationTab({ educationData }) {
             {/* Get rid of the gap and add latest year to all cards and add source}
 
             {/* Educational Attainment Progress */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold mb-1 text-gray-800">
                     Educational Attainment Over Time
                 </h2>
@@ -253,11 +253,11 @@ export default function EducationTab({ educationData }) {
 
             {/* Enrollment and Funding */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         School Enrollment Breakdown
                     </h2>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-gray-600 mb-4 pb-10">
                         {processedData.privateShare.toFixed(1)}% of enrolled students attend private schools
                     </p>
 
@@ -288,7 +288,7 @@ export default function EducationTab({ educationData }) {
                     </div>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         School Funding Gap Trend
                     </h2>
@@ -371,7 +371,7 @@ function StatCard({ title, value, subtitle, latest, trend1Yr, trend10Yr, isFundi
                 <span className={color}>
                     {isPositive ? '+' : ''}{formattedTrend}
                 </span>
-                <span className="text-gray-400">{label}</span>
+                <span className="text-gray-500">{label}</span>
             </div>
         );
     };
@@ -381,8 +381,8 @@ function StatCard({ title, value, subtitle, latest, trend1Yr, trend10Yr, isFundi
         : 'text-gray-900';
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
+        <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-4">
+            <p className="text-sm text-gray-600 mb-1">{title}</p>
             <p className={`text-2xl mb-2 font-bold ${valueColor}`}>{value}</p>
             <p className="text-xs text-gray-500 mb-1">{subtitle}</p>
             <p className="text-xs text-gray-500 mb-2">{latest}</p>

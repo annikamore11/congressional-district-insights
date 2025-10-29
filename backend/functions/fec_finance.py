@@ -26,6 +26,7 @@ EXCLUDE_EMPLOYERS = {
     "NONE",
     "NULL",
     "N/A",
+    "INFORMATION REQUESTED"
 }
 
 # in-memory cache
@@ -151,5 +152,5 @@ def fetch_fec_top_contributors(committee_id, cycle=2024):
         cleaned.append({"employer": row.get("employer"), "total": total})
 
     
-    first10_summary = cleaned[:10]
+    first10_summary = cleaned[:20]
     return first10_summary

@@ -156,9 +156,9 @@ export default function EconomyTab({ economyData }) {
 
     if (!economyData || economyData.length === 0) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Economy</h2>
-                <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="h-64 flex items-center justify-center text-gray-500">
                     Loading economic data...
                 </div>
             </div>
@@ -167,9 +167,9 @@ export default function EconomyTab({ economyData }) {
 
     if (!processedData) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Economy</h2>
-                <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="h-64 flex items-center justify-center text-gray-500">
                     No economic data available
                 </div>
             </div>
@@ -214,7 +214,7 @@ export default function EconomyTab({ economyData }) {
 
             {/* Income & Employment Trends */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         Median Household Income (Not Inflation Adjusted)
                     </h2>
@@ -226,8 +226,8 @@ export default function EconomyTab({ economyData }) {
                         <AreaChart data={processedData.incomeTrend}>
                             <defs>
                                 <linearGradient id="incomeLocal" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#10b981" stopOpacity={0.1}/>
+                                    <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#16a34a" stopOpacity={0.1}/>
                                 </linearGradient>
                                 <linearGradient id="incomeUS" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
@@ -252,13 +252,13 @@ export default function EconomyTab({ economyData }) {
                             <Legend 
                                 formatter={(value) => value === 'local' ? processedData.locationName : 'United States'}
                             />
-                            <Area type="monotone" dataKey="local" stroke="#10b981" fill="url(#incomeLocal)" />
+                            <Area type="monotone" dataKey="local" stroke="#16a34a" fill="url(#incomeLocal)" />
                             <Area type="monotone" dataKey="us" stroke="#94a3b8" fill="url(#incomeUS)" />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
 
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         Unemployment Rate
                     </h2>
@@ -289,7 +289,7 @@ export default function EconomyTab({ economyData }) {
                             <Line 
                                 type="monotone" 
                                 dataKey="local" 
-                                stroke="#ef4444" 
+                                stroke="#991b1b" 
                                 strokeWidth={3}
                                 dot={{ r: 3 }}
                             />
@@ -307,7 +307,7 @@ export default function EconomyTab({ economyData }) {
             </div>
 
             {/* Housing Affordability */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold mb-4 text-gray-800">
                     Housing Costs
                 </h2>
@@ -319,14 +319,16 @@ export default function EconomyTab({ economyData }) {
                         subtitle={`US avg: $${(processedData.medianRent.usValue).toLocaleString()}`}
                         trend1Yr={processedData.medianRent.trend1yr}
                         inverse={true}
+                        isHousing={true}
                     />
                     <StatCard
                         title="Median Home Value"
                         value={`$${(processedData.medianHomeValue.value).toLocaleString()}`}
                         subtitle={`US avg: $${(processedData.medianHomeValue.usValue).toLocaleString()}`}
                         trend1Yr={processedData.medianHomeValue.trend1yr}
+                        isHousing={true}
                     />
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-slate-50 rounded-lg shadow-sm border p-4 border-slate-300/50">
                         <p className="text-sm text-gray-600 mb-1">Renters Cost-Burdened</p>
                         <p className="text-2xl font-bold text-gray-900">
                             {processedData.rentersCostBurdened.value?.toFixed(1)}%
@@ -338,7 +340,7 @@ export default function EconomyTab({ economyData }) {
                             Renters spending 30%+ on rent
                         </p>
                     </div>
-                    <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="bg-slate-50 rounded-lg  shadow-sm p-4 border border-slate-300/50">
                         <p className="text-sm text-gray-600 mb-1">Homeowners Cost-Burdened</p>
                         <p className="text-2xl font-bold text-gray-900">
                             {processedData.homeownersCostBurdened.value?.toFixed(1)}%
@@ -356,7 +358,7 @@ export default function EconomyTab({ economyData }) {
     );
 }
 
-function StatCard({ title, value, subtitle, trend1Yr, trend10Yr, inverse = false }) {
+function StatCard({ title, value, subtitle, trend1Yr, trend10Yr, inverse = false, isHousing = false }) {
     const getTrendDisplay = (trend, label) => {
         if (trend === null || trend === undefined || isNaN(trend)) return null;
         
@@ -382,14 +384,14 @@ function StatCard({ title, value, subtitle, trend1Yr, trend10Yr, inverse = false
                 <span className={color}>
                     {isPositive ? '+' : ''}{Math.abs(trend).toFixed(1)}%
                 </span>
-                <span className="text-gray-400">{label}</span>
+                <span className="text-gray-500">{label}</span>
             </div>
         );
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
+        <div className={`${isHousing ? 'bg-slate-50 border-slate-300/50' : 'bg-indigo-50 border-gray-200'} rounded-lg shadow-sm border p-4`}>
+            <p className="text-sm text-gray-600 mb-1">{title}</p>
             <p className="text-2xl font-bold text-gray-900 mb-2">{value}</p>
             <p className="text-xs text-gray-500 mb-2">{subtitle}</p>
 
@@ -402,4 +404,3 @@ function StatCard({ title, value, subtitle, trend1Yr, trend10Yr, inverse = false
         </div>
     );
 }
-

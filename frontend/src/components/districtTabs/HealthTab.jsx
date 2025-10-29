@@ -79,7 +79,7 @@ export default function HealthTab({ healthData }) {
 
     if (!healthData || healthData.length === 0) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Health</h2>
                 <div className="h-64 flex items-center justify-center text-gray-400">
                     Loading health data...
@@ -90,7 +90,7 @@ export default function HealthTab({ healthData }) {
 
     if (!processedData) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Health</h2>
                 <div className="h-64 flex items-center justify-center text-gray-400">
                     No health data available
@@ -103,19 +103,19 @@ export default function HealthTab({ healthData }) {
         { 
             name: "Mammography Screening", 
             value: (processedData.mammography?.value || 0) * 100,
-            fill: "#3b82f6"
+            fill: "#075985"
         },
         { 
             name: "Flu Vaccinations", 
             value: (processedData.fluVaccinations?.value || 0) * 100,
-            fill: "#8b5cf6"
+            fill: "#86198f"
         }
     ];
 
     return (
         <div className="space-y-6">
             {/* Health Outcomes */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
                     Health Outcomes
                 </h2>
@@ -148,9 +148,9 @@ export default function HealthTab({ healthData }) {
                             <Line 
                                 type="monotone" 
                                 dataKey="local" 
-                                stroke="#ef4444" 
+                                stroke="#b91c1c" 
                                 strokeWidth={3}
-                                dot={{ fill: '#ef4444', r: 4 }}
+                                dot={{ fill: '#b91c1c', r: 4 }}
                                 name="local"
                                 connectNulls
                             />
@@ -174,7 +174,7 @@ export default function HealthTab({ healthData }) {
             </div>
 
             {/* Healthcare Access */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                 <h2 className="text-lg font-semibold mb-4 text-gray-800">
                     Healthcare Access
                 </h2>
@@ -215,8 +215,8 @@ export default function HealthTab({ healthData }) {
             {/* Preventive Care & Risk Factors Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Preventive Care */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold mb-3 text-gray-800">
+                <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
+                    <h2 className="text-lg font-semibold mb-3 text-gray-800 pb-10">
                         Preventive Care Utilization
                     </h2>
                     <ResponsiveContainer width="100%" height={200}>
@@ -244,7 +244,7 @@ export default function HealthTab({ healthData }) {
                 </div>
 
                 {/* Risk Factors */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
                     <h2 className="text-lg font-semibold mb-3 text-gray-800">
                         Risk Factors
                     </h2>
@@ -307,8 +307,8 @@ function HealthStatCard({ title, value, unit = "", change, year, inverse = false
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-600 mb-1">{title}</h3>
+        <div className="bg-slate-50 rounded-lg shadow-sm border border-slate-300/50 p-4">
+            <p className="text-sm text-gray-600 mb-1">{title}</p>
             <p className="text-2xl font-bold text-gray-900 mb-1">
                 {value !== null && value !== undefined ? 
                     formatAsRatio ? `1:${Math.round(value)}` : 

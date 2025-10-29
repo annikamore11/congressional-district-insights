@@ -86,7 +86,7 @@ export default function CivicsTab({ civicsData }) {
     return (
         <>
             {/* Presidential Election Results */}
-            <div className="bg-slate-100 rounded-lg shadow-md border border-blue-100/50 p-6 mb-6">
+            <div className="bg-indigo-50 rounded-lg shadow-md border border-slate-100 p-6 mb-6">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
                     Presidential Popular Vote Results
                 </h2>
@@ -223,14 +223,14 @@ function StatCard({ title, value, subtitle, color }) {
     const getColor = () => {
         if (!color) return 'text-gray-900';
         if (value === 'Democrat' || value === 'Lean D') return 'text-sky-600';
-        if (value === 'Republican' || value === 'Lean R') return 'text-red-600';
+        if (value === 'Republican' || value === 'Lean R') return 'text-red-700';
         if (value === 'Competitive') return 'text-purple-600';
         return 'text-gray-900';
     };
 
     return (
-        <div className="bg-slate-100 rounded-lg shadow-md border border-blue-100/50 p-4">
-            <h3 className="text-sm font-medium text-gray-700 mb-1">{title}</h3>
+        <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-4">
+            <p className="text-sm text-gray-600 mb-1">{title}</p>
             <p className={`text-2xl font-bold ${getColor()}`}>{value}</p>
             <p className="text-xs text-gray-700 mt-1">{subtitle}</p>
         </div>

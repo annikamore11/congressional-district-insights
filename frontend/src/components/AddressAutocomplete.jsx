@@ -105,7 +105,7 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
             setTimeout(() => setShowDropdown(false), 200);
           }}
           placeholder="Full address..."
-          className="border border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-white shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-64 focus:outline-none focus:ring-2 focus:ring-slate-900"
+          className="border border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-64 focus:outline-none focus:ring-2 focus:ring-slate-900"
           onKeyPress={(e) => {
             if (e.key === 'Enter' && value) {
               handleSelect(value);
@@ -114,7 +114,7 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
         />
         
         {showDropdown && suggestions.length > 0 && (
-          <ul className="absolute top-full left-0 w-[400px] mt-1 bg-indigo-100 border border-slate-900 rounded-md shadow-lg max-h-60 overflow-auto z-[100]">
+          <ul className="absolute top-full left-0 w-[400px] mt-1 bg-indigo-50 border border-slate-900 rounded-md shadow-lg max-h-60 overflow-auto z-[100]">
             {suggestions.map((suggestion, idx) => (
               <li
                 key={idx}
@@ -139,7 +139,7 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
       
       <button
         onClick={onCancel}
-        className="border border-l-0 border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-white shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-xs hover:bg-gray-600 flex items-center"
+        className="border border-l-0 border-gray-600 bg-slate-900 text-white shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-xs hover:bg-slate-700 flex items-center"
         title="Switch to ZIP code"
       >
         <X size={16} />

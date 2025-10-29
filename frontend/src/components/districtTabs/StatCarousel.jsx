@@ -67,7 +67,7 @@ export default function StatCarousel({ children }) {
                             key={index}
                             className={`h-1.5 rounded-full transition-all duration-300 ${
                                 index === currentIndex 
-                                    ? 'w-6 bg-purple-600' 
+                                    ? 'w-6 bg-indigo-600' 
                                     : 'w-1.5 bg-gray-300'
                             }`}
                         />

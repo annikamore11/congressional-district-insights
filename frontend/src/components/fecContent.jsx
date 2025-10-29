@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import Chart from "chart.js/auto";
 import {STATE_FULL} from './constants';
 
-export default function FECContent({ member }) {  
+export default function FECContent({ member, fecCache, setFecCache }) {  
     // Add this helper function at the top of your component
 const formatCurrency = (value) => {
   if (value >= 1000000) {
@@ -32,6 +32,44 @@ const formatCurrency = (value) => {
   }, [member?.bio_id]);
 
   const loadFECData = async () => {
+    destroyCharts();
+    // Check if data is already cached for this member
+    if (fecCache[member.bio_id]) {
+      console.log(`Fec data for ${member.bio_id} already cached, using cached data`);
+      const cached = fecCache[member.bio_id];
+
+      setHasFecData(cached.hasFecData);
+
+      if (!cached.hasFecData) {
+        // If cached result shows no data, just set state and return
+        setAggregatedData(null);
+        setTopState(null);
+        setContributors([]);
+        destroyCharts();
+        setLoading(false);
+        return;
+      }
+      
+      // Has data - restore everything
+      setAggregatedData(cached.aggregatedData);
+      setTopState(cached.topState);
+      setContributors(cached.contributors);
+      
+      drawFinanceChart(cached.aggregatedData);
+      drawPieChart(cached.aggregatedData);
+      drawStateChart(cached.dataState);
+      // Wait for DOM to be ready before drawing charts
+      setTimeout(() => {
+        drawFinanceChart(cached.aggregatedData);
+        drawPieChart(cached.aggregatedData);
+        drawStateChart(cached.dataState);
+      }, 0);
+      
+      setLoading(false);
+      return;
+    }
+
+
     setLoading(true);
     setHasFecData(true);
 
@@ -41,6 +79,18 @@ const formatCurrency = (value) => {
       const idData = await idResp.json();
 
       if (!idData.length) {
+        // Set the no data result
+        setFecCache(prev => ({
+          ...prev,
+          [member.bio_id]: {
+            hasFecData: false,
+            aggregatedData: null,
+            topState: null,
+            contributors: [],
+            dataState: null
+          }
+        }));
+
         setHasFecData(false);
         setContributors([]);
         destroyCharts();
@@ -59,6 +109,18 @@ const formatCurrency = (value) => {
 
       // If no receipts, mark as no data
       if (!agg.receipts || agg.receipts === 0) {
+        // Cache the "no receipts" result
+        setFecCache(prev => ({
+          ...prev,
+          [member.bio_id]: {
+            hasFecData: false,
+            aggregatedData: null,
+            topState: null,
+            contributors: [],
+            dataState: null
+          }
+        }));
+
         setHasFecData(false);
         setContributors([]);
         destroyCharts();
@@ -74,7 +136,8 @@ const formatCurrency = (value) => {
         body: JSON.stringify({ fec_ids: idData }),
       });
       const dataState = await respState.json();
-      setTopState(dataState.state_totals[0].state);
+      const topStateValue = dataState.state_totals[0].state || null;
+      setTopState(topStateValue);
 
       // Top individual contributors
       const respCont = await fetch(`${API_BASE}/api/member/top_contributors`, {
@@ -83,8 +146,20 @@ const formatCurrency = (value) => {
         body: JSON.stringify({ fec_ids: idData }),
       });
       const dataCont = await respCont.json();
+      const contributorsData = dataCont.top_contributors || [];
+      setContributors(contributorsData);
 
-      setContributors(dataCont.top_contributors || []);
+      // Cache all results
+      setFecCache(prev => ({
+        ...prev,
+        [member.bio_id]: {
+          hasFecData: true,
+          aggregatedData: agg,
+          topState: topStateValue,
+          contributors: contributorsData,
+          dataState: dataState
+        }
+      }));
 
       // Draw charts
       drawFinanceChart(agg);
@@ -113,7 +188,7 @@ const formatCurrency = (value) => {
   const newChart = new Chart(ctx, {
     type: "bar",
     data: {
-      labels: ["Cash", "Debts", "Raised", "Spent"],
+      labels: ["Cash On Hand", "Debts", "Raised", "Spent"],
       datasets: [
         {
           label: "USD",
@@ -123,7 +198,7 @@ const formatCurrency = (value) => {
             agg.receipts || 0,
             agg.disbursements || 0,
           ],
-          backgroundColor: ["#10b981", "#ef4444", "#3b82f6", "#f59e0b"], // emerald, red, blue, amber
+          backgroundColor: ["#86198f", "#075985", "#3f6212", "#991b1b"], // emerald, red, blue, amber
           borderRadius: 8,
           borderWidth: 0,
         },
@@ -189,11 +264,11 @@ const drawPieChart = (agg) => {
         {
           data: pieData,
           backgroundColor: [
-            "#3b82f6", // blue
-            "#8b5cf6", // violet
-            "#10b981", // emerald
-            "#f59e0b", // amber
-            "#6366f1", // indigo
+            "#991b1b", // blue
+            "#3f6212", // violet
+            "#075985", // emerald
+            "#86198f", // amber
+            "#b45309", // indigo
           ],
           borderWidth: 2,
           borderColor: '#ffffff',
@@ -205,7 +280,7 @@ const drawPieChart = (agg) => {
       maintainAspectRatio: false,
       plugins: {
         legend: { 
-          position: "bottom",
+          position: "right",
           labels: {
             padding: 15,
             color: '#64748b',
@@ -245,11 +320,11 @@ const drawStateChart = (dataState) => {
           label: "Total Contributions ($)",
           data: dataState.state_totals?.map((d) => d.total) || [],
           backgroundColor: [
-            "#10b981", // emerald
-            "#3b82f6", // blue
-            "#8b5cf6", // violet
-            "#f59e0b", // amber
-            "#06b6d4", // cyan
+            "#991b1b", 
+            "#3f6212", 
+            "#075985", 
+            "#86198f", 
+            "#b45309", 
           ],
           borderRadius: 8,
           borderWidth: 0,
@@ -302,107 +377,107 @@ const drawStateChart = (dataState) => {
     };
   }, []);
 
-  if (loading) {
+if (loading) {
     return (
         <div className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 border-4 border-indigo-600 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+            <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
             <p className="text-gray-500">Loading campaign finance data...</p>
         </div>
     );
-  }
+}
 
  return (
 
-    <div className="p-6 bg-indigo-200 min-h-screen">
+    <div className="p-6 bg-indigo-100 min-h-screen">
         <div className="max-w-7xl mx-auto">
             
         {hasFecData && aggregatedData ? (
-            <div className="flex flex-col gap-6">
-                {/* Key Metrics at Top */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-indigo-50 rounded-lg shadow-md p-5 border border-slate-200">
-                    <p className="text-sm text-slate-600 mb-1">Total Raised</p>
-                    <p className="text-2xl font-bold text-indigo-600">
+            <div className="flex flex-col gap-3">
+              {/* Key Metrics at Top */}
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className="bg-slate-50 rounded-lg shadow-md p-3 border border-slate-200">
+                    <p className="text-xs text-slate-600 mb-1">Total Raised</p>
+                    <p className="text-xl font-bold text-slate-900">
                     {formatCurrency(aggregatedData.receipts || 0)}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">2023-24 Cycle</p>
                 </div>
-                <div className="bg-indigo-50 rounded-lg shadow-md p-5 border border-indigo-200">
-                    <p className="text-sm text-slate-600 mb-1">Total Spent</p>
-                    <p className="text-2xl font-bold text-amber-600">
+                <div className="bg-slate-50 rounded-lg shadow-md p-3 border border-indigo-200">
+                    <p className="text-xs text-slate-600 mb-1">Total Spent</p>
+                    <p className="text-xl font-bold text-slate-900">
                     {formatCurrency(aggregatedData.disbursements || 0)}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">Campaign expenses</p>
                 </div>
-                <div className="bg-indigo-50 rounded-lg shadow-md p-5 border border-indigo-200">
-                    <p className="text-sm text-slate-600 mb-1">Top State Contributor</p>
-                    <p className="text-2xl font-bold text-blue-600">
+                <div className="bg-slate-50 rounded-lg shadow-md p-3 border border-indigo-200">
+                    <p className="text-xs text-slate-600 mb-1">Top State Contributor</p>
+                    <p className="text-xl font-bold text-slate-900">
                     {topState ? STATE_FULL[topState] || topState : 'N/A'}
                     </p>
                     <p className="text-xs text-slate-500 mt-1">By total amount</p>
                 </div>
-                <div className="bg-indigo-50 rounded-lg shadow-md p-5 border border-indigo-200">
-                    <p className="text-sm text-slate-600 mb-1">Small Donors</p>
-                    <p className="text-2xl font-bold text-violet-600">
+                <div className="bg-slate-50 rounded-lg shadow-md p-3 border border-indigo-200">
+                    <p className="text-xs text-slate-600 mb-1">Small Donors</p>
+                    <p className="text-xl font-bold text-slate-900">
                     {aggregatedData.receipts > 0 
                         ? ((aggregatedData.small_contributions / aggregatedData.receipts) * 100).toFixed(1)
                         : '0'}%
                     </p>
                     <p className="text-xs text-slate-500 mt-1">Of total raised</p>
                 </div>
-                </div>
+              </div>
 
             {/* First Row - Finance Overview & Contribution Breakdown */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* Finance Overview Card */}
-                <div className="bg-indigo-50 rounded-lg shadow-md p-6 border border-indigo-200 hover:shadow-lg transition-shadow">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+
+              {/* Finance Overview Card */}
+              <div className="bg-slate-50 rounded-lg shadow-md p-6 border border-indigo-200 hover:shadow-lg transition-shadow">
                 <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-indigo-600 rounded"></span>
+                    <span className="w-1 h-6 bg-slate-900 rounded"></span>
                     Finance Overview
                 </h3>
-                <div className="relative w-full h-80">
+                <div className="relative w-full h-72">
                     <canvas id="financeChart"></canvas>
                 </div>
                 </div>
 
                 {/* Contribution Breakdown Card */}
-                <div className="bg-indigo-50 rounded-lg shadow-md p-6 border border-indigo-200 hover:shadow-lg transition-shadow">
+                <div className="bg-slate-50 rounded-lg shadow-md p-6 border border-indigo-200 hover:shadow-lg transition-shadow">
                 <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-violet-500 rounded"></span>
+                    <span className="w-1 h-6 bg-slate-900 rounded"></span>
                     Contribution Breakdown
                 </h3>
-                <div className="relative w-full h-80 flex items-center justify-center">
+                <div className="relative w-full h-72 flex items-center justify-center">
                     <canvas id="contributionPie"></canvas>
                 </div>
-                </div>
-            </div>
+              </div>
+            
 
-            {/* Second Row - State Contributors & Top Contributors */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {/* State Contributors Card */}
-                <div className="bg-indigo-50 rounded-lg shadow-md p-6 border border-indigo-200 hover:shadow-lg transition-shadow">
+              {/* Second Row - State Contributors & Top Contributors */}
+              {/* State Contributors Card */}
+              <div className="bg-slate-50 rounded-lg shadow-md p-6 border border-indigo-200 hover:shadow-lg transition-shadow">
                 <h3 className="text-lg font-semibold text-slate-800 mb-4 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-amber-500 rounded"></span>
+                    <span className="w-1 h-6 bg-slate-900 rounded"></span>
                     Top 5 State Contributors
                 </h3>
-                <div className="relative w-full h-80">
+                <div className="relative w-full h-72">
                     <canvas id="stateBarChart"></canvas>
                 </div>
-                </div>
+              </div>
 
                 {/* Top Contributors Table Card */}
-                <div className="bg-indigo-50 rounded-lg shadow-md border border-indigo-200 flex flex-col">
+              <div className="bg-slate-50 rounded-lg shadow-md border border-indigo-200">
                 <div className="p-6 border-b border-slate-200">
                     <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                    <span className="w-1 h-6 bg-cyan-500 rounded"></span>
-                    Top 10 Individual Contributors
+                    <span className="w-1 h-6 bg-slate-900 rounded"></span>
+                    Top 20 Individual Contributors
                     </h3>
                     <p className="text-sm text-slate-600 mt-1">
                     Primary Campaign Committee • Excludes PACs and Committees
                     </p>
                 </div>
                 
-                <div className="overflow-auto flex-1" style={{ maxHeight: '400px' }}>
+                <div className="overflow-auto flex-1 relative w-full h-72">
                     <table className="min-w-full">
                     <thead className="bg-slate-50 border-b border-slate-200 sticky top-0">
                         <tr>
@@ -429,7 +504,7 @@ const drawStateChart = (dataState) => {
                             <td className="px-6 py-4 text-sm font-medium text-slate-800">
                                 {c.employer}
                             </td>
-                            <td className="px-6 py-4 text-sm text-right font-semibold text-emerald-600">
+                            <td className="px-6 py-4 text-sm text-right font-semibold text-green-800">
                                 ${Number(c.total || 0).toLocaleString()}
                             </td>
                             </tr>
@@ -444,9 +519,9 @@ const drawStateChart = (dataState) => {
                             </td>
                         </tr>
                         )}
-                    </tbody>
-                    </table>
-                </div>
+                      </tbody>
+                      </table>
+                  </div>
                 </div>
             </div>
             </div>

@@ -180,7 +180,7 @@ export default function App() {
   return (
     <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-slate-500 to-slate-700 pt-2">
       {/* Header */}
-      <header className="flex items-center p-6 px-20 z-50 justify-between">
+      <header className="flex items-center p-6 px-20 z-50 justify-between border-b border-slate-200/20">
         {/* Logo on the left */}
         <div className="flex-shrink-0">
           <p
@@ -205,11 +205,11 @@ export default function App() {
                   onChange={handleZipChange}
                   onKeyPress={handleZipKeyPress}
                   placeholder="ZIP Code"
-                  className="border border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-slate-100 shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-28 focus:outline-none focus:ring-2 focus:ring-slate-800"
+                  className="border border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-28 focus:outline-none focus:ring-2 focus:ring-slate-800"
                 />
                 <button
                   onClick={() => setAddressMode('address')}
-                  className="border border-l-0 border-gray-600 bg-gradient-to-r from-slate-800 to-slate-950 text-slate-100 shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-sm hover:bg-slate-400 flex items-center"
+                  className="border border-l-0 border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-sm hover:bg-slate-700 flex items-center"
                   title="Use full address for better accuracy"
                 >
                   <MapPin size={16} />
@@ -238,7 +238,7 @@ export default function App() {
           </button>
 
           {/* Sign Up Button */}
-          <button className="hidden sm:flex items-center bg-slate-900 hover:bg-slate-400 shadow-sm shadow-slate-500/30 text-slate-100 text-md px-3 py-1.5 rounded gap-1 transition-colors">
+          <button className="hidden sm:flex items-center bg-slate-900 hover:bg-slate-700 shadow-sm shadow-slate-500/30 text-slate-100 text-md px-3 py-1.5 rounded gap-1 transition-colors">
             <span>Sign Up</span>
           </button>
 
@@ -247,7 +247,7 @@ export default function App() {
         {/* Sidebar Toggle Button */}
           <button 
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="flex items-center text-white hover:text-slate-300 transition-colors px-2 py-1.5 rounded gap-2"
+            className="flex items-center text-slate-100 hover:text-slate-300 transition-colors px-2 py-1.5 rounded gap-2"
           >
             <Menu size={25} />
           </button>
@@ -264,16 +264,16 @@ export default function App() {
 
       {/* Sidebar - Slides in from right */}
       <nav className={`
-        fixed top-0 right-0 h-full w-80 bg-slate-800 border-l border-slate-700 z-50
+        fixed top-0 right-0 h-full sm:w-full lg:w-80 bg-slate-600 border-l border-slate-100/20 z-50
         transform transition-transform duration-300 ease-in-out shadow-2xl
         ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
         {/* Sidebar Header */}
-        <div className="flex items-center justify-between p-6 border-b border-slate-700">
-          <h2 className="text-white font-bold text-xl">Navigation</h2>
+        <div className="flex items-center justify-between p-6 border-b border-slate-100/20">
+          <h2 className="text-slate-100 font-bold text-xl">Navigation</h2>
           <button
             onClick={() => setSidebarOpen(false)}
-            className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-lg transition-colors"
+            className="p-2 text-slate-100 hover:bg-slate-800 rounded-lg transition-colors"
           >
             <X size={20} />
           </button>
@@ -304,7 +304,7 @@ export default function App() {
         </div>
 
         {/* Sidebar Footer (Optional) */}
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100/20">
           <p className="text-slate-100 text-xs text-center">
             CivicLens © 2025
           </p>
@@ -315,7 +315,6 @@ export default function App() {
       <main className="flex-1 overflow-y-auto text-gray-600">
         <Routes>
           <Route path="/" element={<LandingPage locationData={locationData} />} />
-          <Route path="/fec" element={<FECPage />} />
           <Route path="/district-insights" element={<DistrictOverview />} />
           <Route path="/representatives" element={<RepPage />} />
         </Routes>

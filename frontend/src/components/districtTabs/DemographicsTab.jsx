@@ -151,9 +151,9 @@ export default function DemographicsTab({ demographicsData }) {
 
     if (!demographicsData || demographicsData.length === 0) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Demographics</h2>
-                <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="h-64 flex items-center justify-center text-gray-500">
                     Loading demographic data...
                 </div>
             </div>
@@ -162,9 +162,9 @@ export default function DemographicsTab({ demographicsData }) {
 
     if (!processedData) {
         return (
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">Demographics</h2>
-                <div className="h-64 flex items-center justify-center text-gray-400">
+                <div className="h-64 flex items-center justify-center text-gray-500">
                     No demographic data available
                 </div>
             </div>
@@ -198,11 +198,11 @@ export default function DemographicsTab({ demographicsData }) {
 
             
             {/* Current Snapshot - Race */}
-            <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+            <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-6">
                 <h2 className="text-xl font-semibold mb-1 text-gray-800">
                     Current Racial Composition
                 </h2>
-                <p className="text-sm text-gray-600 mb-4">
+                <p className="text-sm text-gray-500 mb-4">
                     {processedData.latestYear} data—10-year changes shown. Note: Race categories are independent of Hispanic/Latino ethnicity.
                 </p>
 
@@ -222,11 +222,11 @@ export default function DemographicsTab({ demographicsData }) {
             {/* Divorce Rate Trend + Hispanic/Latino Ethnicity side by side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Hispanic/Latino Ethnicity - Left Side */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         Hispanic/Latino Ethnicity
                     </h2>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-gray-500 mb-4">
                         Hispanic/Latino is an ethnicity, not a race. Individuals may identify as Hispanic/Latino and also identify with any racial category above.
                     </p>
 
@@ -236,8 +236,8 @@ export default function DemographicsTab({ demographicsData }) {
                             value={processedData.ethnicityData.local}
                             change={processedData.ethnicityData.change}
                         />
-                        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                            <p className="text-xs font-medium text-gray-600 mb-1">U.S. Average</p>
+                        <div className="bg-slate-50 rounded-lg shadow-sm p-4 border border-slate-300/50">
+                            <p className="text-xs font-medium text-gray-500 mb-1">U.S. Average</p>
                             <p className="text-2xl font-bold text-gray-900">{processedData.ethnicityData.us.toFixed(1)}%</p>
                             <p className="text-xs text-gray-500 mt-2">National comparison</p>
                         </div>
@@ -245,11 +245,11 @@ export default function DemographicsTab({ demographicsData }) {
                 </div>
 
                 {/* Divorce Rate Trend - Right Side */}
-                <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+                <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-6">
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         Divorce Rate Trend
                     </h2>
-                    <p className="text-sm text-gray-600 mb-4">
+                    <p className="text-sm text-gray-500 mb-4">
                         Rising divorce rates may indicate need for family support services
                     </p>
 
@@ -315,14 +315,14 @@ function StatCard({ title, value, subtitle, trend1Yr, trend10Yr }) {
                 <span className={color}>
                     {isPositive ? '+' : ''}{Math.abs(trend).toFixed(1)}%
                 </span>
-                <span className="text-gray-400">{label}</span>
+                <span className="text-gray-500">{label}</span>
             </div>
         );
     };
 
     return (
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4">
-            <h3 className="text-sm font-medium text-gray-600">{title}</h3>
+        <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-4">
+            <p className="text-sm text-gray-600 mb-1">{title}</p>
             <p className="text-2xl font-bold text-gray-900 mb-2">{value}</p>
             <p className="text-xs text-gray-500 mb-2">{subtitle}</p>
             
@@ -343,13 +343,13 @@ function DemographicCard({ category, value, change }) {
     };
 
     return (
-        <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
-            <p className="text-xs font-medium text-gray-600 mb-1">{category}</p>
+        <div className="bg-slate-50 rounded-lg p-4 shadow-sm border border-slate-300/50">
+            <p className="text-xs font-medium text-gray-500 mb-1">{category}</p>
             <p className="text-2xl font-bold text-gray-900">{value.toFixed(1)}%</p>
             {change !== null && (
                 <div className="flex items-center gap-1 mt-1">
                     {Math.abs(change) < 0.5 ? 
-                        <Minus size={12} className="text-gray-400" /> :
+                        <Minus size={12} className="text-gray-500" /> :
                         change > 0 ? 
                             <TrendingUp size={12} className="text-green-600" /> :
                             <TrendingDown size={12} className="text-red-600" />
@@ -357,7 +357,7 @@ function DemographicCard({ category, value, change }) {
                     <span className={`text-xs font-medium ${getChangeColor()}`}>
                         {change > 0 ? '+' : ''}{change.toFixed(1)}%
                     </span>
-                    <span className="text-xs text-gray-400">10yr</span>
+                    <span className="text-xs text-gray-500">10yr</span>
                 </div>
             )}
         </div>
