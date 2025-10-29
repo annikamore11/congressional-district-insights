@@ -54,18 +54,17 @@ const formatCurrency = (value) => {
       setAggregatedData(cached.aggregatedData);
       setTopState(cached.topState);
       setContributors(cached.contributors);
-      
-      drawFinanceChart(cached.aggregatedData);
-      drawPieChart(cached.aggregatedData);
-      drawStateChart(cached.dataState);
-      // Wait for DOM to be ready before drawing charts
-      setTimeout(() => {
-        drawFinanceChart(cached.aggregatedData);
-        drawPieChart(cached.aggregatedData);
-        drawStateChart(cached.dataState);
-      }, 0);
-      
       setLoading(false);
+      
+      // Wait for state updates and DOM render, then draw charts
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          drawFinanceChart(cached.aggregatedData);
+          drawPieChart(cached.aggregatedData);
+          drawStateChart(cached.dataState);
+        });
+      });
+      
       return;
     }
 
@@ -93,7 +92,6 @@ const formatCurrency = (value) => {
 
         setHasFecData(false);
         setContributors([]);
-        destroyCharts();
         setLoading(false);
         return;
       }
@@ -123,7 +121,6 @@ const formatCurrency = (value) => {
 
         setHasFecData(false);
         setContributors([]);
-        destroyCharts();
         setLoading(false);
         return;
       }
@@ -161,12 +158,17 @@ const formatCurrency = (value) => {
         }
       }));
 
-      // Draw charts
-      drawFinanceChart(agg);
-      drawPieChart(agg);
-      drawStateChart(dataState);
-
       setLoading(false);
+
+      // Draw charts after state updates
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          drawFinanceChart(agg);
+          drawPieChart(agg);
+          drawStateChart(dataState);
+        });
+      });
+      
     } catch (error) {
       console.error("Error loading FEC data:", error);
       setHasFecData(false);
