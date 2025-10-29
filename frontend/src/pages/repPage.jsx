@@ -58,7 +58,7 @@ export default function RepresentativesPage({ locationData }) {
                         <span className="w-1 h-6 bg-slate-900 rounded-full flex-shrink-0"></span>
                         <div className="flex items-baseline gap-2">
                             <span className="text-xl font-bold text-slate-100">Federal Representatives</span>
-                            <span className="text-sm font-bold text-slate-100">- Click member for Campaign Finance Details</span>
+                            <span className="hidden md:inline font-bold text-slate-100">- Click member for Campaign Finance Details</span>
                         </div>
                     </h2>
                     
@@ -229,7 +229,7 @@ function StateRepCard({ member, type }) {
     }[type] || "Unknown Role"
 
     return (
-        <div className="bg-indigo-50 rounded-2xl p-6 border-2 shadow-lg shadow-indigo-600/20 border-slate-300 transition-all duration-300 mb-8">
+        <div className="bg-indigo-50 rounded-2xl p-6 border-2 shadow-lg shadow-indigo-600/20 border-slate-300 transition-all duration-300">
             {/* Photo */}
             <div className="flex items-start gap-4 mb-4">
                 <img

@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  MapPinHouse,
   MapPin,
   Menu,
   X,
@@ -61,31 +60,26 @@ export default function App() {
   const location = useLocation();
   const [locationData, setLocationData] = useState("");
   const [zip, setZip] = useState("");
+  const [displayAddress, setDisplayAddress] = useState(""); // Add this new state
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
-  const [addressMode, setAddressMode] = useState('zip'); 
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false)
 
-  
-  // Fetch location based on ZIP code
-  const fetchLocationFromZip = async (zipCode) => {
-      if (!zipCode || zipCode.length < 5) return;
+  // Single fetch function for both ZIP and address
+  const fetchLocation = async (query) => {
+      if (!query) return;
       
       setIsLoadingLocation(true);
       try {
-        const resp = await fetch(`${API_BASE}/api/geocode?q=${zipCode}`);
+        const resp = await fetch(`${API_BASE}/api/geocode?q=${encodeURIComponent(query)}`);
         const data = await resp.json();
         
         if(data) {
           setLocationData(data);
           setZip(data.zip);
+          setDisplayAddress(query); // Keep whatever user entered
           
-          if (location.pathname === '/') {
-            navigate("/district-insights", {
-              state: { locationData: data },
-              replace: true
-            });
-          } else if (location.pathname === '/representatives' || location.pathname === '/district-insights') {
-            // ✅ Re-navigate to current page with new data
+          if (location.pathname === '/representatives' || location.pathname === '/district-insights') {
             navigate(location.pathname, {
               state: { locationData: data },
               replace: true
@@ -93,94 +87,33 @@ export default function App() {
           }
         }
       } catch (err) {
-        console.error("Failed to fetch location from ZIP:", err);
+        console.error("Failed to fetch location:", err);
       } finally {
         setIsLoadingLocation(false);
       }
     };
 
-  // Fetch location based on address
-  const fetchLocationFromAddress = async (address) => {
-      if (!address) return;
-      
-      setIsLoadingLocation(true);
+  // Initial Zip code from IP address load
+  useEffect(() => {
+    async function fetchInitialLocation() {
       try {
-        const resp = await fetch(`${API_BASE}/api/geocode?q=${encodeURIComponent(address)}`);
+        const resp = await fetch('https://ipwho.is/');
         const data = await resp.json();
         
-        if(data) {
-          setLocationData(data);
-          setZip(data.zip);
-          
-          if (location.pathname === '/') {
-            navigate("/district-insights", {
-              state: { locationData: data },
-              replace: true
-            });
-          } else if (location.pathname === '/representatives' || location.pathname === '/district-insights') {
-            // ✅ Re-navigate to current page with new data
-            navigate(location.pathname, {
-              state: { locationData: data },
-              replace: true
-            });
-          }
+        if (data && data.success !== false && data.postal) {
+          fetchLocation(data.postal); // Use the single function
         }
       } catch (err) {
-        console.error("Failed to fetch location from address:", err);
-      } finally {
-        setIsLoadingLocation(false);
+        console.error("Failed to fetch IP location:", err);
       }
-    };
-
-    // Initial Zip code from IP address load
-    useEffect(() => {
-      async function fetchLocation() {
-        try {
-          const resp = await fetch('https://ipwho.is/');
-          const data = await resp.json();
-          
-          if (data && data.success !== false && data.postal) {
-            // Fetch location data using lat/lng
-            const geocodeResp = await fetch(
-              `${API_BASE}/api/geocode?q=${data.postal}`
-            );
-            const geocodeData = await geocodeResp.json();
-
-            if (geocodeData) {
-              setLocationData(geocodeData);
-              setZip(geocodeData.zip || data.postal || '');
-            }
-          }
-        } catch (err) {
-          console.error("Failed to fetch IP location:", err);
-        }
-        }
-        fetchLocation();
-    }, [API_BASE]);
-    
-
-    // Handle ZIP code change with debounce
-    const handleZipChange = (e) => {
-      const newZip = e.target.value.replace(/\D/g, '').slice(0, 5); // Only numbers, max 5 digits
-      setZip(newZip);
-      
-      // Fetch location when ZIP is complete (5 digits)
-      if (newZip.length === 5) {
-        fetchLocationFromZip(newZip);
-      }
-    };
-
-    // Handle Enter key press
-    const handleZipKeyPress = (e) => {
-      if (e.key === 'Enter' && zip.length === 5) {
-        fetchLocationFromZip(zip);
-      }
-    };
+    }
+    fetchInitialLocation();
+  }, [API_BASE]);
 
   return (
     <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-slate-500 to-slate-700 pt-2">
       {/* Header */}
-      <header className="flex items-center p-6 px-20 z-50 justify-between border-b border-slate-200/20">
+      <header className="flex items-center p-6 px-4 lg:px-20 z-50 justify-between border-b border-slate-200/20">
         {/* Logo on the left */}
         <div className="flex-shrink-0">
           <p
@@ -196,19 +129,16 @@ export default function App() {
         {/* Right side controls */}
         <div className="ml-auto flex items-center gap-4">
           {/* Unified Address/ZIP Input */}
-          <div className="hidden md:flex items-center gap-2">
-            <span className="text-xs text-slate-200">Change Location:</span>
-            <div className="relative">
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-slate-200 md:inline hidden">Change Location:</span>
+            
+            {/* Desktop: Inline input */}
+            <div className="relative hidden md:block">
               <AddressAutocomplete
-                onSelectAddress={(query) => {
-                  // Check if it's a ZIP code (5 digits) or full address
-                  if (/^\d{5}$/.test(query.trim())) {
-                    fetchLocationFromZip(query.trim());
-                  } else {
-                    fetchLocationFromAddress(query);
-                  }
-                }}
+                initialValue={displayAddress}
+                onSelectAddress={(query) => fetchLocation(query)}
                 onCancel={() => {}}
+                isMobile={false}
               />
               
               {isLoadingLocation && (
@@ -217,7 +147,25 @@ export default function App() {
                 </div>
               )}
             </div>
+            
+            {/* Mobile: Same component with mobile mode */}
+            <div className="relative md:hidden">
+              <AddressAutocomplete
+                initialValue={displayAddress}
+                onSelectAddress={(query) => fetchLocation(query)}
+                onCancel={() => {}}
+                isMobile={true}
+              />
+              
+              {isLoadingLocation && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+            </div>
+  
           </div>
+          
 
           {/* Login Button */}
           <button className="hidden sm:flex items-center text-slate-100 hover:text-slate-300 text-md transition-colors px-3 py-1.5 rounded gap-1">

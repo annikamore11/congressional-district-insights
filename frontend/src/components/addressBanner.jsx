@@ -29,7 +29,7 @@ export default function AccuracyBanner() {
                 <p className="text-sm text-indigo-800">
                     <span className="font-semibold">District or representative look wrong?</span> ZIP codes can span multiple districts. Use the{' '}
                     <span className="inline-flex items-center gap-1 font-semibold">
-                        <MapPin size={12} className="inline" /> address input
+                        address input 
                     </span>{' '}
                     in the header above for better accuracy.
                 </p>
