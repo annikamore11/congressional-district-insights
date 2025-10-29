@@ -256,8 +256,8 @@ export default function DemographicsTab({ demographicsData }) {
                         <AreaChart data={processedData.divorceTrend}>
                             <defs>
                                 <linearGradient id="divLocal" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#ef4444" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#ef4444" stopOpacity={0.1}/>
+                                    <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8}/>
+                                    <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
                                 </linearGradient>
                                 <linearGradient id="divUS" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>

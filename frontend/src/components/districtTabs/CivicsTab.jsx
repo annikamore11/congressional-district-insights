@@ -109,16 +109,16 @@ export default function CivicsTab({ civicsData }) {
                             <AreaChart data={chartData}>
                                 <defs>
                                     <linearGradient id="colorDem" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#0369a1" stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor="#0369a1" stopOpacity={0.1}/>
+                                        <stop offset="5%" stopColor="#2563eb" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#2563eb" stopOpacity={0.1}/>
                                     </linearGradient>
                                     <linearGradient id="colorRep" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#b91c1c" stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor="#b91c1c" stopOpacity={0.1}/>
+                                        <stop offset="5%" stopColor="#dc2626" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#dc2626" stopOpacity={0.1}/>
                                     </linearGradient>
                                     <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="5%" stopColor="#15803d" stopOpacity={0.8}/>
-                                        <stop offset="95%" stopColor="#15803d" stopOpacity={0.1}/>
+                                        <stop offset="5%" stopColor="#16a34a" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#16a34a" stopOpacity={0.1}/>
                                     </linearGradient>
                                     <linearGradient id="colorLibertarian" x1="0" y1="0" x2="0" y2="1">
                                         <stop offset="5%" stopColor="#ca8a04" stopOpacity={0.8}/>
@@ -241,8 +241,8 @@ function getTrend(chartData) {
 function StatCard({ title, value, subtitle, color }) {
     const getColor = () => {
         if (!color) return 'text-gray-900';
-        if (value === 'Democrat' || value === 'Lean D') return 'text-sky-600';
-        if (value === 'Republican' || value === 'Lean R') return 'text-red-700';
+        if (value === 'Democrat' || value === 'Lean D') return 'text-blue-600';
+        if (value === 'Republican' || value === 'Lean R') return 'text-red-600';
         if (value === 'Competitive') return 'text-purple-600';
         return 'text-gray-900';
     };

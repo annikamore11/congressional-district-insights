@@ -111,12 +111,12 @@ export default function HealthTab({ healthData }) {
         { 
             name: "Mammography Screening", 
             value: (processedData.mammography?.value || 0) * 100,
-            fill: "#075985"
+            fill: "#d946ef"
         },
         { 
             name: "Flu Vaccines", 
             value: (processedData.fluVaccinations?.value || 0) * 100,
-            fill: "#86198f"
+            fill: "#06b6d4"
         }
     ];
 
@@ -164,9 +164,9 @@ export default function HealthTab({ healthData }) {
                                 <Line 
                                     type="monotone" 
                                     dataKey="local" 
-                                    stroke="#b91c1c" 
+                                    stroke="#dc2626" 
                                     strokeWidth={3}
-                                    dot={{ fill: '#b91c1c', r: 4 }}
+                                    dot={{ fill: '#dc2626', r: 4 }}
                                     name="local"
                                     connectNulls
                                 />

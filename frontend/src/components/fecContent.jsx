@@ -209,7 +209,7 @@ export default function FECContent({ member, fecCache, setFecCache }) {
               agg.receipts || 0,
               agg.disbursements || 0,
             ],
-            backgroundColor: ["#86198f", "#075985", "#3f6212", "#991b1b"],
+            backgroundColor: [ "#0ea5e9", "#c026d3", "#65a30d", "#dc2626" ],
             borderRadius: 8,
             borderWidth: 0,
           }],
@@ -276,7 +276,7 @@ export default function FECContent({ member, fecCache, setFecCache }) {
           labels: ["Large", "Small", "Candidate", "PAC", "Other"],
           datasets: [{
             data: pieData,
-            backgroundColor: ["#991b1b", "#3f6212", "#075985", "#86198f", "#b45309"],
+            backgroundColor: ["#dc2626", "#65a30d", "#0ea5e9", "#c026d3", "#f59e0b"],
             borderWidth: 2,
             borderColor: '#ffffff',
           }],
@@ -332,7 +332,7 @@ export default function FECContent({ member, fecCache, setFecCache }) {
           datasets: [{
             label: "Total Contributions ($)",
             data: dataState.state_totals?.map((d) => d.total) || [],
-            backgroundColor: ["#991b1b", "#3f6212", "#075985", "#86198f", "#b45309"],
+            backgroundColor: ["#dc2626", "#65a30d", "#0ea5e9", "#c026d3", "#f59e0b"],
             borderRadius: 8,
             borderWidth: 0,
           }],
@@ -485,7 +485,7 @@ export default function FECContent({ member, fecCache, setFecCache }) {
                               </span>
                             </td>
                             <td className="px-6 py-4 text-sm font-medium text-slate-800">{c.employer}</td>
-                            <td className="px-6 py-4 text-sm text-right font-semibold text-green-800">
+                            <td className="px-6 py-4 text-sm text-right font-semibold text-lime-500">
                               ${Number(c.total || 0).toLocaleString()}
                             </td>
                           </tr>

@@ -289,7 +289,7 @@ export default function EconomyTab({ economyData }) {
                             <Line 
                                 type="monotone" 
                                 dataKey="local" 
-                                stroke="#991b1b" 
+                                stroke="#dc2626" 
                                 strokeWidth={3}
                                 dot={{ r: 3 }}
                             />

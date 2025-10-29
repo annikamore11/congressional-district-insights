@@ -201,7 +201,7 @@ export default function EducationTab({ educationData }) {
                             <Line 
                                 type="monotone" 
                                 dataKey="localHS" 
-                                stroke="#3b82f6" 
+                                stroke="#2563eb" 
                                 strokeWidth={3}
                                 name="High School+"
                                 dot={{ r: 3 }}
@@ -217,7 +217,7 @@ export default function EducationTab({ educationData }) {
                             <Line 
                                 type="monotone" 
                                 dataKey="localDoctorate" 
-                                stroke="#8b5cf6" 
+                                stroke="#c026d3" 
                                 strokeWidth={2}
                                 name="Doctorate"
                                 dot={{ r: 2 }}
@@ -289,7 +289,7 @@ export default function EducationTab({ educationData }) {
                                     <div className="text-sm text-gray-600 mt-1">Public School</div>
                                 </div>
                                 <div className="text-center">
-                                    <div className="text-4xl font-bold text-pink-600">
+                                    <div className="text-4xl font-bold text-fuchsia-600">
                                         {processedData.currentPrivate.toFixed(1)}%
                                     </div>
                                     <div className="text-sm text-gray-600 mt-1">Private School</div>
@@ -302,7 +302,7 @@ export default function EducationTab({ educationData }) {
                                     style={{ width: `${(processedData.currentPublic / processedData.currentEnrollment) * 100}%` }}
                                 />
                                 <div 
-                                    className="bg-pink-600" 
+                                    className="bg-fuchsia-600" 
                                     style={{ width: `${(processedData.currentPrivate / processedData.currentEnrollment) * 100}%` }}
                                 />
                             </div>

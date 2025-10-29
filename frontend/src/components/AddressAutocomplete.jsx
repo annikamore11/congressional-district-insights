@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
+let isApiConfigured = false;
+
 function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = false }) {
   const [value, setValue] = useState(initialValue);
   const [suggestions, setSuggestions] = useState([]);
@@ -8,7 +10,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
   const [showDropdown, setShowDropdown] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [userTyping, setUserTyping] = useState(false);
-  const autocompleteService = useRef(null);
+  const AutocompleteSuggestion = useRef(null);
   const sessionToken = useRef(null);
   const isInitialized = useRef(false);
   const inputRef = useRef(null);
@@ -20,14 +22,17 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
       
       try {
         // Initialize the API loader
-        setOptions({
-          key: import.meta.env.VITE_GOOGLE_API_KEY
-        });
+        if (!isApiConfigured) {
+          setOptions({
+            key: import.meta.env.VITE_GOOGLE_API_KEY
+          });
+          isApiConfigured = true;
+        }
         
         // Import the places library
-        const { AutocompleteService, AutocompleteSessionToken } = await importLibrary("places");
+        const { AutocompleteSuggestion: AC, AutocompleteSessionToken } = await importLibrary("places");
         
-        autocompleteService.current = new AutocompleteService();
+        AutocompleteSuggestion.current = AC;
         sessionToken.current = new AutocompleteSessionToken();
         isInitialized.current = true;
       } catch (err) {
@@ -40,7 +45,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
 
   // Fetch suggestions
   useEffect(() => {
-    if (!value || value.length < 3 || !autocompleteService.current || !userTyping) {
+    if (!value || value.length < 3 || !AutocompleteSuggestion.current || !userTyping) {
       setSuggestions([]);
       setShowDropdown(false);
       return;
@@ -52,27 +57,33 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
         const request = {
           input: value,
           sessionToken: sessionToken.current,
-          componentRestrictions: { country: "us" },
+          includedRegionCodes: ["us"],
+          language: "en-US",
+          region: "us",
         };
+        
+        const { suggestions: fetchedSuggestions } = 
+          await AutocompleteSuggestion.current.fetchAutocompleteSuggestions(request);
 
-        autocompleteService.current.getPlacePredictions(request, (predictions, status) => {
-          if (status === "OK" && predictions) {
-            setSuggestions(predictions.map(p => p.description));
+          if (fetchedSuggestions && fetchedSuggestions.length > 0) {
+            const formattedSuggestions = fetchedSuggestions.map(
+              s => s.placePrediction.text.toString()
+            );
+            setSuggestions(formattedSuggestions);
             setShowDropdown(true);
           } else {
             setSuggestions([]);
             setShowDropdown(false);
           }
           setIsLoading(false);
-        });
-      } catch (err) {
-        console.error("Autocomplete error:", err);
-        setSuggestions([]);
-        setShowDropdown(false);
-        setIsLoading(false);
-      }
-    }, 300);
-
+        } catch (err) {
+          console.error("Autocomplete error:", err);
+          setSuggestions([]);
+          setShowDropdown(false);
+          setIsLoading(false);
+        }
+      }, 300);
+        
     return () => clearTimeout(timer);
   }, [value, userTyping]);
 
