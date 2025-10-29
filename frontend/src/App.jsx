@@ -195,42 +195,29 @@ export default function App() {
 
         {/* Right side controls */}
         <div className="ml-auto flex items-center gap-4">
-          {/* Enhanced Location Input with Toggle */}
-          <div className="hidden md:block relative">
-            {addressMode === 'zip' ? (
-              <div className="flex items-center">
-                <input
-                  type="text"
-                  value={zip}
-                  onChange={handleZipChange}
-                  onKeyPress={handleZipKeyPress}
-                  placeholder="ZIP Code"
-                  className="border border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-28 focus:outline-none focus:ring-2 focus:ring-slate-800"
-                />
-                <button
-                  onClick={() => setAddressMode('address')}
-                  className="border border-l-0 border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-sm hover:bg-slate-700 flex items-center"
-                  title="Use full address for better accuracy"
-                >
-                  <MapPin size={16} />
-                </button>
-              </div>
-            ) : (
+          {/* Unified Address/ZIP Input */}
+          <div className="hidden md:flex items-center gap-2">
+            <span className="text-xs text-slate-200">Change Location:</span>
+            <div className="relative">
               <AddressAutocomplete
-                onSelectAddress={(address) => {
-                  fetchLocationFromAddress(address);
+                onSelectAddress={(query) => {
+                  // Check if it's a ZIP code (5 digits) or full address
+                  if (/^\d{5}$/.test(query.trim())) {
+                    fetchLocationFromZip(query.trim());
+                  } else {
+                    fetchLocationFromAddress(query);
+                  }
                 }}
-                onCancel={() => setAddressMode('zip')}
+                onCancel={() => {}}
               />
-            )}
-            {isLoadingLocation && (
-              <div className="absolute right-10 top-1/2 -translate-y-1/2">
-                <div className="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></div>
-              </div>
-            )}
+              
+              {isLoadingLocation && (
+                <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                  <div className="w-4 h-4 border-2 border-slate-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+            </div>
           </div>
-
-          
 
           {/* Login Button */}
           <button className="hidden sm:flex items-center text-slate-100 hover:text-slate-300 text-md transition-colors px-3 py-1.5 rounded gap-1">

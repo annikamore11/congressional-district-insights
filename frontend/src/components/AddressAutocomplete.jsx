@@ -2,7 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 import { X } from "lucide-react";
 
-function AddressAutocomplete({ onSelectAddress, onCancel }) {
+function AddressAutocomplete({ onSelectAddress }) {
   const [value, setValue] = useState("");
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -92,59 +92,50 @@ function AddressAutocomplete({ onSelectAddress, onCancel }) {
   };
 
   return (
-    <div className="relative flex items-center">
-      <div className="relative flex-1">
-        <input
-          type="text"
-          value={value}
-          onChange={(e) => setValue(e.target.value)}
-          onFocus={() => {
-            if (suggestions.length > 0) setShowDropdown(true);
-          }}
-          onBlur={() => {
-            setTimeout(() => setShowDropdown(false), 200);
-          }}
-          placeholder="Full address..."
-          className="border border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded-l text-sm w-64 focus:outline-none focus:ring-2 focus:ring-slate-900"
-          onKeyPress={(e) => {
-            if (e.key === 'Enter' && value) {
-              handleSelect(value);
-            }
-          }}
-        />
-        
-        {showDropdown && suggestions.length > 0 && (
-          <ul className="absolute top-full left-0 w-[400px] mt-1 bg-indigo-50 border border-slate-900 rounded-md shadow-lg max-h-60 overflow-auto z-[100]">
-            {suggestions.map((suggestion, idx) => (
-              <li
-                key={idx}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  handleSelect(suggestion);
-                }}
-                className="px-3 py-2 hover:bg-indigo-200 cursor-pointer text-sm text-slate-800 border-b border-indigo-100 last:border-b-0"
-              >
-                {suggestion}
-              </li>
-            ))}
-          </ul>
-        )}
-        
-        {isLoading && (
-          <div className="absolute right-2 top-1/2 -translate-y-1/2">
-            <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        )}
-      </div>
+    <div className="relative">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onFocus={() => {
+          if (suggestions.length > 0) setShowDropdown(true);
+        }}
+        onBlur={() => {
+          setTimeout(() => setShowDropdown(false), 200);
+        }}
+        placeholder="ZIP code or full address..."  // Updated placeholder
+        className="border border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 placeholder-slate-300 px-3 py-1.5 rounded text-sm w-64 focus:outline-none focus:ring-2 focus:ring-slate-900"
+        onKeyPress={(e) => {
+          if (e.key === 'Enter' && value) {
+            handleSelect(value);
+          }
+        }}
+      />
       
-      <button
-        onClick={onCancel}
-        className="border border-l-0 border-gray-600 bg-slate-900 text-white shadow-sm shadow-slate-500/30 px-2 py-1.5 rounded-r text-xs hover:bg-slate-700 flex items-center"
-        title="Switch to ZIP code"
-      >
-        <X size={16} />
-      </button>
+      {showDropdown && suggestions.length > 0 && (
+        <ul className="absolute top-full left-0 w-[400px] mt-1 bg-indigo-50 border border-slate-900 rounded-md shadow-lg max-h-60 overflow-auto z-[100]">
+          {suggestions.map((suggestion, idx) => (
+            <li
+              key={idx}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                handleSelect(suggestion);
+              }}
+              className="px-3 py-2 hover:bg-indigo-200 cursor-pointer text-sm text-slate-800 border-b border-indigo-100 last:border-b-0"
+            >
+              {suggestion}
+            </li>
+          ))}
+        </ul>
+      )}
+      
+      {isLoading && (
+        <div className="absolute right-2 top-1/2 -translate-y-1/2">
+          <div className="w-3 h-3 border-2 border-gray-400 border-t-transparent rounded-full animate-spin"></div>
+        </div>
+      )}
     </div>
+    
   );
 }
 
