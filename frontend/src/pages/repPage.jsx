@@ -36,7 +36,7 @@ export default function RepresentativesPage({ locationData }) {
     };
 
     return (
-        <div className="h-screen w-full">
+        <div className="min-h-screen w-full">
             <AccuracyBanner />
             <div className="max-w-7xl mx-auto px-4">
                 {/* Compact Header */}
@@ -122,22 +122,24 @@ export default function RepresentativesPage({ locationData }) {
 
             {/* Modal Overlay for Campaign Finance */}
             {selectedRep && (
+            <div 
+                className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 overflow-y-auto animate-fadeIn"
+                onClick={handleClose}
+            >
+                <div className="min-h-screen flex items-start justify-center p-4 py-8">
                 <div 
-                    className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-fadeIn"
-                    onClick={handleClose}
+                    className="bg-slate-100 rounded-2xl shadow-2xl w-full max-w-7xl overflow-hidden animate-slideUp"
+                    onClick={(e) => e.stopPropagation()}
                 >
-                    <div 
-                        className="bg-slate-100 rounded-2xl shadow-2xl max-w-7xl w-full max-h-[90vh] overflow-hidden animate-slideUp"
-                        onClick={(e) => e.stopPropagation()}
-                    >
-                        <CampaignFinanceCard
-                            rep={selectedRep}
-                            onClose={handleClose}
-                            fecCache={fecCache}
-                            setFecCache={setFecCache}
-                        />
-                    </div>
+                    <CampaignFinanceCard
+                    rep={selectedRep}
+                    onClose={handleClose}
+                    fecCache={fecCache}
+                    setFecCache={setFecCache}
+                    />
                 </div>
+                </div>
+            </div>
             )}
         </div>
     );
@@ -289,50 +291,52 @@ function StateRepCard({ member, type }) {
 }
 
 function CampaignFinanceCard({ rep, onClose, fecCache, setFecCache }) {
-    const partyColors = {
-        "Democrat": "bg-blue-600",
-        "Republican": "bg-red-600",
-        "Independent": "bg-gray-600"
-    };
+  const partyColors = {
+    "Democrat": "bg-blue-600",
+    "Republican": "bg-red-600",
+    "Independent": "bg-gray-600"
+  };
 
-    return (
-        <>
-            {/* Header with Photo */}
-            <div className={`bg-gradient-to-r from-slate-800 to-slate-950 text-white p-6 flex items-center justify-between`}>
-                <div className="flex items-center gap-4">
-                    <img
-                        src={rep.photo_url}
-                        alt={rep.name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-white/30"
-                    />
-                    <div>
-                        <h2 className="text-2xl font-bold text-slate-100 mb-1">
-                            Campaign Finance
-                        </h2>
-                        <div className="flex items-center gap-2 text-sm">
-                            <p className="text-slate-100 text-lg font-medium">{rep.name}</p>
-                            <span className="text-slate-400">•</span>
-                            <span className="text-slate-300">2023-24 Cycle</span>
-                        </div>
-                    </div>
-                </div>
-                <button
-                    onClick={onClose}
-                    className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
-                    aria-label="Close"
-                >
-                    <X size={24} />
-                </button>
+  return (
+    <>
+      {/* Header with Photo */}
+      <div className={`bg-gradient-to-r from-slate-800 to-slate-950 text-white p-4 flex items-center justify-between`}>
+        <div className="flex items-center gap-4">
+          <img
+            src={rep.photo_url}
+            alt={rep.name}
+            className="w-16 h-16 rounded-full object-cover border-2 border-white/30"
+          />
+          <div>
+            <h2 className="text-lg md:text-2xl font-bold text-slate-100 mb-1">
+              Campaign Finance
+            </h2>
+            <div className="flex items-center gap-2 text-sm">
+              <p className="text-slate-100 text-sm md:text-lg font-medium">{rep.name}</p>
+              <span className="text-slate-400">•</span>
+              <span className="text-slate-300">2023-24 Cycle</span>
             </div>
+          </div>
+        </div>
+        <button
+          onClick={onClose}
+          className="p-2 hover:bg-white/20 rounded-lg transition-colors flex-shrink-0"
+          aria-label="Close"
+        >
+          <X size={24} />
+        </button>
+      </div>
 
-            {/* Scrollable Content */}
-            <div className="overflow-y-auto max-h-[calc(90vh-100px)]">
-                <FECContent 
-                    member={rep} 
-                    fecCache={fecCache}
-                    setFecCache={setFecCache}
-                />
-            </div>
-        </>
-    );
+      <div>
+        <FECContent 
+          member={rep} 
+          fecCache={fecCache}
+          setFecCache={setFecCache}
+        />
+      </div>
+    </>
+  );
 }
+
+
+

@@ -20,7 +20,6 @@ export default function DistrictContent({ locationData }) {
 
     const [activeTab, setActiveTab] = useState("state");
     const [activeSubTab, setActiveSubTab] = useState("civics");
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const [loading, setLoading] = useState(false);
     
     // Store all data in a single state object
@@ -80,7 +79,6 @@ export default function DistrictContent({ locationData }) {
             
             // CHECK IF DATA ALREADY LOADED - NEW!
             if (allData[activeTab].loaded) {
-                console.log(`${activeTab} data already cached, skipping fetch`);
                 return;
             }
             
@@ -155,7 +153,7 @@ export default function DistrictContent({ locationData }) {
                 <AccuracyBanner />
 
                 {/* Content Area */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto mb-4">
                     <div className="max-w-6xl mx-auto p-4 sm:p-6">
                         {/* Sub-tabs */}
                         <div className="flex flex-wrap sm:flex-nowrap gap-2 mb-6 bg-indigo-50 backdrop-blur-sm rounded-xl p-2 shadow-sm border border-slate-100">
@@ -195,8 +193,6 @@ export default function DistrictContent({ locationData }) {
                             </>
                         )}
 
-                        {/* Collapsible sources at bottom */}
-                        <CollapsibleSources />
                     </div>
                 </div>
             </div>
@@ -204,120 +200,3 @@ export default function DistrictContent({ locationData }) {
     );
 }
 
-// Collapsible sources component
-function CollapsibleSources() {
-    const [isExpanded, setIsExpanded] = useState(false);
-
-    return (
-        <div className="mt-6 border-t border-gray-200 pt-4">
-            <button 
-                onClick={() => setIsExpanded(!isExpanded)}
-                className="flex items-center gap-2 text-sm text-gray-600 hover:text-gray-800 w-full"
-            >
-                {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-                <span>Data sources & methodology</span>
-            </button>
-            
-            {isExpanded && (
-                <div className="mt-3 text-xs text-gray-600 space-y-2 pl-6">
-                    <p>
-                        • <strong>Civics:</strong> MIT Election Data and Science Lab, "County Presidential Election Returns 2000-2024" 
-                        <a 
-                            href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>
-                    </p>
-                    <p>
-                        • <strong>Demographics:</strong> U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) 
-                        <a 
-                            href="https://www.census.gov/programs-surveys/acs.html" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>
-                    </p>
-                    <p>
-                        • <strong>Economy:</strong> U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) 
-                        <a 
-                            href="https://www.census.gov/programs-surveys/acs.html" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>
-                    </p>
-                    <p>
-                        • <strong>Health:</strong> County Health Rankings & Roadmaps (2013-2022) 
-                        <a 
-                            href="https://www.countyhealthrankings.org/health-data/methodology-and-sources/data-documentation" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>, U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) [Uninsured measure]
-                        <a 
-                            href="https://www.census.gov/programs-surveys/acs.html" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>
-                    </p>
-                    <p>
-                        • <strong>Education:</strong> U.S. Census Bureau ACS PUMS 5-year estimates (2013-2023) 
-                        <a 
-                            href="https://www.census.gov/programs-surveys/acs.html" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>, County Health Rankings & Roadmaps (2013-2022) [School Funding measure]
-                        <a 
-                            href="https://www.countyhealthrankings.org/health-data/methodology-and-sources/data-documentation" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>
-                    </p>
-                    <p>
-                        • <strong>Campaign Finance:</strong> FEC.gov 
-                        <a 
-                            href="https://www.fec.gov" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>
-                    </p>
-                    <p>
-                        • <strong>Congressional Member Info:</strong> congress-legislators github repository
-                        <a 
-                            href="https://github.com/unitedstates/congress-legislators" 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-gray-600 underline hover:text-black ml-1"
-                        >
-                            Visit Site
-                        </a>
-                    </p>
-                    <p className="text-[10px] text-gray-500 mt-2 italic">
-                        All measures from the Census ACS represent 5-year rolling averages
-                    </p>
-                </div>
-            )}
-        </div>
-    );
-}

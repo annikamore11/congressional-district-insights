@@ -1,9 +1,17 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import StatCarousel from "./StatCarousel";
 
 export default function HealthTab({ healthData }) {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    
+        useEffect(() => {
+            const handleResize = () => setIsMobile(window.innerWidth < 768);
+            window.addEventListener('resize', handleResize);
+            return () => window.removeEventListener('resize', handleResize);
+        }, []);
+
     const processedData = useMemo(() => {
         if (!healthData || healthData.length === 0) return null;
 
@@ -106,7 +114,7 @@ export default function HealthTab({ healthData }) {
             fill: "#075985"
         },
         { 
-            name: "Flu Vaccinations", 
+            name: "Flu Vaccines", 
             value: (processedData.fluVaccinations?.value || 0) * 100,
             fill: "#86198f"
         }
@@ -115,111 +123,115 @@ export default function HealthTab({ healthData }) {
     return (
         <div className="space-y-6">
             {/* Health Outcomes */}
-            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                    Health Outcomes
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                    Years of potential life lost before age 75 per 100,000 population (through 2021)
-                </p>
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-3 bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+                    <h2 className="text-xl font-semibold mb-1 text-gray-800">
+                        Health Outcomes
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-4">
+                        Years of potential life lost before age 75 per 100,000 population (through 2021)
+                    </p>
 
-                {processedData.prematureDeathTrend.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={processedData.prematureDeathTrend}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis 
-                                dataKey="year" 
-                                tick={{ fill: '#6b7280', fontSize: 12 }}
-                            />
-                            <YAxis 
-                                label={{ value: 'Years Lost', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: 12 } }}
-                                tick={{ fill: '#6b7280', fontSize: 12 }}
-                            />
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
-                                formatter={(value, name) => {
-                                    const label = name === 'local' ? processedData.locationName : 'United States';
-                                    return [value?.toLocaleString() || '—', label];
-                                }}
-                            />
-                            <Legend 
-                                formatter={(value) => value === 'local' ? processedData.locationName : 'United States'}
-                            />
-                            <Line 
-                                type="monotone" 
-                                dataKey="local" 
-                                stroke="#b91c1c" 
-                                strokeWidth={3}
-                                dot={{ fill: '#b91c1c', r: 4 }}
-                                name="local"
-                                connectNulls
-                            />
-                            <Line 
-                                type="monotone" 
-                                dataKey="us" 
-                                stroke="#94a3b8" 
-                                strokeWidth={2}
-                                strokeDasharray="5 5"
-                                dot={{ fill: '#94a3b8', r: 3 }}
-                                name="us"
-                                connectNulls
-                            />
-                        </LineChart>
-                    </ResponsiveContainer>
-                ) : (
-                    <div className="h-64 flex items-center justify-center text-gray-400">
-                        No premature death data available
-                    </div>
-                )}
-            </div>
+                    {processedData.prematureDeathTrend.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={350}>
+                            <LineChart data={processedData.prematureDeathTrend}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                <XAxis 
+                                    dataKey="year" 
+                                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                                />
+                                <YAxis 
+                                    label={!isMobile ? { 
+                                        value: 'Years Lost', 
+                                        angle: -90, 
+                                        position: 'insideLeft', 
+                                        style: { fill: '#6b7280', fontSize: 12 }
+                                    } : undefined}
+                                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                                    allowDecimals={false}
+                                    width={isMobile ? 35 : 60}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
+                                    formatter={(value, name) => {
+                                        const label = name === 'local' ? processedData.locationName : 'United States';
+                                        return [value?.toLocaleString() || '—', label];
+                                    }}
+                                />
+                                <Legend 
+                                    formatter={(value) => value === 'local' ? processedData.locationName : 'United States'}
+                                />
+                                <Line 
+                                    type="monotone" 
+                                    dataKey="local" 
+                                    stroke="#b91c1c" 
+                                    strokeWidth={3}
+                                    dot={{ fill: '#b91c1c', r: 4 }}
+                                    name="local"
+                                    connectNulls
+                                />
+                                <Line 
+                                    type="monotone" 
+                                    dataKey="us" 
+                                    stroke="#94a3b8" 
+                                    strokeWidth={2}
+                                    strokeDasharray="5 5"
+                                    dot={{ fill: '#94a3b8', r: 3 }}
+                                    name="us"
+                                    connectNulls
+                                />
+                            </LineChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-64 flex items-center justify-center text-gray-400">
+                            No premature death data available
+                        </div>
+                    )}
+                </div>
 
-            {/* Healthcare Access */}
-            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold mb-4 text-gray-800">
-                    Healthcare Access
-                </h2>
-                <StatCarousel>
-                    <HealthStatCard
-                        title="Uninsured"
-                        value={processedData.uninsured?.value}
-                        unit="%"
-                        change={processedData.uninsured?.change}
-                        year={processedData.uninsured?.year}
-                        inverse={true}
-                        isDecimalPercent={true}
-                        decimals={1}
-                    />
-                    <HealthStatCard
-                        title="Primary Care Physicians"
-                        value={processedData.primaryCarePhysicians?.value}
-                        unit=""
-                        change={processedData.primaryCarePhysicians?.change}
-                        year={processedData.primaryCarePhysicians?.year}
-                        inverse={true}
-                        decimals={0}
-                        formatAsRatio={true}
-                    />
-                    <HealthStatCard
-                        title="Dentists"
-                        value={processedData.dentists?.value}
-                        unit=""
-                        change={processedData.dentists?.change}
-                        year={processedData.dentists?.year}
-                        inverse={true}
-                        decimals={0}
-                        formatAsRatio={true}
-                    />
-                </StatCarousel>
+                {/* Healthcare Access */}
+                <div className="flex flex-col gap-4">
+                    
+                    <StatCarousel layout="vertical">
+                        <HealthStatCard
+                            title="Uninsured"
+                            value={processedData.uninsured?.value}
+                            unit="%"
+                            change={processedData.uninsured?.change}
+                            inverse={true}
+                            isDecimalPercent={true}
+                            decimals={1}
+                        />
+                        <HealthStatCard
+                            title="Primary Care Physicians"
+                            value={processedData.primaryCarePhysicians?.value}
+                            unit=""
+                            change={processedData.primaryCarePhysicians?.change}
+                            inverse={true}
+                            decimals={0}
+                            formatAsRatio={true}
+                        />
+                        <HealthStatCard
+                            title="Dentists"
+                            value={processedData.dentists?.value}
+                            unit=""
+                            change={processedData.dentists?.change}
+                            inverse={true}
+                            decimals={0}
+                            formatAsRatio={true}
+                        />
+                    </StatCarousel>
+                </div>
             </div>
 
             {/* Preventive Care & Risk Factors Row */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Preventive Care */}
                 <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
-                    <h2 className="text-lg font-semibold mb-3 text-gray-800 pb-10">
+                    <h2 className="text-lg font-semibold mb-3 text-gray-800 pb-5">
                         Preventive Care Utilization
                     </h2>
-                    <ResponsiveContainer width="100%" height={200}>
+                    <ResponsiveContainer width="100%" height={250}>
                         <BarChart data={preventiveCareData} layout="vertical">
                             <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                             <XAxis 
@@ -231,8 +243,8 @@ export default function HealthTab({ healthData }) {
                             <YAxis 
                                 type="category" 
                                 dataKey="name" 
-                                tick={{ fill: '#6b7280', fontSize: 12 }}
-                                width={150}
+                                tick={<CustomYAxisTick />}
+                                width={isMobile ? 70 : 100}
                             />
                             <Tooltip 
                                 contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
@@ -307,7 +319,7 @@ function HealthStatCard({ title, value, unit = "", change, year, inverse = false
     };
 
     return (
-        <div className="bg-slate-50 rounded-lg shadow-sm border border-slate-300/50 p-4">
+        <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-6 gap-2 flex flex-col justify-center h-full">
             <p className="text-sm text-gray-600 mb-1">{title}</p>
             <p className="text-2xl font-bold text-gray-900 mb-1">
                 {value !== null && value !== undefined ? 
@@ -323,11 +335,6 @@ function HealthStatCard({ title, value, unit = "", change, year, inverse = false
                         `${change > 0 ? '+' : ''}${change.toFixed(1)}%` : "—"}
                 </span>
             </div>
-            {year && (
-                <p className="text-xs text-gray-500 mt-1">
-                    Latest: {year}
-                </p>
-            )}
         </div>
     );
 }
@@ -378,3 +385,40 @@ function RiskFactorCard({ title, value, unit = "", change, year, inverse = false
         </div>
     );
 }
+
+const CustomYAxisTick = ({ x, y, payload }) => {
+    const words = payload.value.split(' ');
+    const maxWidth = window.innerWidth < 768 ? 100 : 140;
+    
+    // Simple two-line split
+    const midpoint = Math.ceil(words.length / 2);
+    const line1 = words.slice(0, midpoint).join(' ');
+    const line2 = words.slice(midpoint).join(' ');
+
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text 
+                x={0} 
+                y={0} 
+                dy={-5}
+                textAnchor="end" 
+                fill="#6b7280" 
+                fontSize={window.innerWidth < 768 ? 10 : 12}
+            >
+                {line1}
+            </text>
+            {line2 && (
+                <text 
+                    x={0} 
+                    y={0} 
+                    dy={8}
+                    textAnchor="end" 
+                    fill="#6b7280" 
+                    fontSize={window.innerWidth < 768 ? 10 : 12}
+                >
+                    {line2}
+                </text>
+            )}
+        </g>
+    );
+};

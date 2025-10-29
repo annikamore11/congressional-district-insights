@@ -7,6 +7,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
   const [isLoading, setIsLoading] = useState(false);
   const [showDropdown, setShowDropdown] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const [userTyping, setUserTyping] = useState(false);
   const autocompleteService = useRef(null);
   const sessionToken = useRef(null);
   const isInitialized = useRef(false);
@@ -23,7 +24,6 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
           key: import.meta.env.VITE_GOOGLE_API_KEY
         });
         
-
         // Import the places library
         const { AutocompleteService, AutocompleteSessionToken } = await importLibrary("places");
         
@@ -40,7 +40,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
 
   // Fetch suggestions
   useEffect(() => {
-    if (!value || value.length < 3 || !autocompleteService.current) {
+    if (!value || value.length < 3 || !autocompleteService.current || !userTyping) {
       setSuggestions([]);
       setShowDropdown(false);
       return;
@@ -74,12 +74,13 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
     }, 300);
 
     return () => clearTimeout(timer);
-  }, [value]);
+  }, [value, userTyping]);
 
   const handleSelect = async (address) => {
     setValue(address);
     setSuggestions([]);
     setShowDropdown(false);
+    setUserTyping(false);
     
     // Create new session token after selection
     try {
@@ -92,16 +93,18 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
     onSelectAddress(address);
   };
 
-  // Also update the value when initialValue changes AND clear suggestions
+    // Update value when initialValue changes
   useEffect(() => {
     setValue(initialValue);
-    setSuggestions([]); // Clear suggestions when location changes externally
+    setSuggestions([]);
     setShowDropdown(false);
+    setUserTyping(false); // Don't trigger suggestions for initial value
   }, [initialValue]);
 
-  return (
+
+   return (
     <div className="relative">
-      {/* Backdrop/Card when focused on mobile */}
+      {/* Backdrop when focused on mobile */}
       {isMobile && isFocused && (
         <div 
           className="fixed inset-0 bg-black/80 z-[90] md:hidden"
@@ -112,10 +115,10 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
         />
       )}
       
-      {/* Input Container - enlarges on mobile when focused */}
+      {/* Input Container */}
       <div className={`
         ${isMobile && isFocused 
-          ? 'fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[100] w-[90vw] max-w-md bg-slate-800 p-4 rounded-xl shadow-2xl' 
+          ? 'fixed top-20 left-1/2 -translate-x-1/2 z-[100] w-[90vw] max-w-md bg-slate-800 p-4 rounded-xl shadow-2xl' 
           : 'relative'
         }
       `}>
@@ -123,10 +126,13 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
           ref={inputRef}
           type="text"
           value={value}
-          onChange={(e) => setValue(e.target.value)}
+          onChange={(e) => {
+            setValue(e.target.value);
+            setUserTyping(true); // User is actively typing
+          }}
           onFocus={() => {
             setIsFocused(true);
-            if (suggestions.length > 0) setShowDropdown(true);
+            if (suggestions.length > 0 && userTyping) setShowDropdown(true);
           }}
           onBlur={() => {
             setTimeout(() => {
@@ -137,8 +143,8 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
           placeholder="ZIP code or address..."
           className={`
             border border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 
-            placeholder-slate-300 px-3 py-1.5 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600
-            ${isMobile && isFocused ? 'w-full text-base py-3' : 'w-48 md:w-64'}
+            placeholder-slate-300 px-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600
+            ${isMobile && isFocused ? 'w-full text-base py-3' : 'w-48 md:w-64 py-1.5'}
           `}
           onKeyPress={(e) => {
             if (e.key === 'Enter' && value) {
@@ -180,7 +186,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
       </div>
     </div>
   );
-
 }
+
 
 export default AddressAutocomplete;

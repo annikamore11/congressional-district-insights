@@ -27,8 +27,18 @@
 
 
 @layer base {
+  * {
+    box-sizing: border-box;
+  }
+
+  html, body {
+    overflow-x: hidden;
+    max-width: 100vw;
+  }
+
   body {
     font-family: 'Times New Roman', Times, serif;
+    position: 100vw;
   }
   
   h1, h2, h3, h4, h5, h6 {

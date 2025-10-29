@@ -18,8 +18,8 @@ export default function LandingContent({ locationData }) {
     return (
         <div className="bg-gradient-to-br from-slate-500 to-slate-700 text-slate-100">
             {/* Hero Section */}
-            <div className="max-w-5xl mx-auto text-center py-20 px-6">
-                <h1 className="text-5xl font-bold mb-6">
+            <div className="max-w-7xl mx-auto text-center py-20 px-6">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold mb-6">
                     Know Your District.<br />Know Your Representatives.
                 </h1>
                 <p className="text-xl mb-4 text-slate-200 max-w-3xl mx-auto">

@@ -1,7 +1,15 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
 
 export default function CivicsTab({ civicsData }) {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+
+    useEffect(() => {
+        const handleResize = () => setIsMobile(window.innerWidth < 768);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
     const chartData = useMemo(() => {
         if (!civicsData || civicsData.length === 0) return [];
 
@@ -85,115 +93,126 @@ export default function CivicsTab({ civicsData }) {
 
     return (
         <>
-            {/* Presidential Election Results */}
-            <div className="bg-indigo-50 rounded-lg shadow-md border border-slate-100 p-6 mb-6">
-                <h2 className="text-xl font-semibold mb-1 text-gray-800">
-                    Presidential Popular Vote Results
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                    Vote share by party over time
-                </p>
-                
-                {chartData.length > 0 ? (
-                    <ResponsiveContainer width="100%" height={350}>
-                        <AreaChart data={chartData}>
-                            <defs>
-                                <linearGradient id="colorDem" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#0369a1" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#0369a1" stopOpacity={0.1}/>
-                                </linearGradient>
-                                <linearGradient id="colorRep" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#b91c1c" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#b91c1c" stopOpacity={0.1}/>
-                                </linearGradient>
-                                <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#15803d" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#15803d" stopOpacity={0.1}/>
-                                </linearGradient>
-                                <linearGradient id="colorLibertarian" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#ca8a04" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#ca8a04" stopOpacity={0.1}/>
-                                </linearGradient>
-                                <linearGradient id="colorOther" x1="0" y1="0" x2="0" y2="1">
-                                    <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
-                                    <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.1}/>
-                                </linearGradient>
-                            </defs>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 12 }} />
-                            <YAxis 
-                                label={{ value: 'Vote Share (%)', angle: -90, position: 'insideLeft', style: { fill: '#6b7280', fontSize: 12 } }}
-                                tick={{ fill: '#6b7280', fontSize: 12 }}
-                                domain={[0, 100]}
-                            />
-                            <Tooltip 
-                                contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
-                                formatter={(value) => `${value}%`}
-                            />
-                            <Legend wrapperStyle={{ paddingTop: '20px' }} />
-                            
-                            {/* Always show Democrat and Republican */}
-                            <Area 
-                                type="monotone" 
-                                dataKey="Democrat" 
-                                stackId="1"
-                                stroke="#0369a1" 
-                                fillOpacity={1}
-                                fill="url(#colorDem)" 
-                            />
-                            <Area 
-                                type="monotone" 
-                                dataKey="Republican" 
-                                stackId="1"
-                                stroke="#b91c1c" 
-                                fillOpacity={1}
-                                fill="url(#colorRep)" 
-                            />
-                            
-                            {/* Dynamically render other parties that exist in the data */}
-                            {allPartiesAcrossYears.map(party => {
-                                const colors = partyColors[party] || { stroke: '#94a3b8', gradient: 'colorOther' };
-                                return (
-                                    <Area 
-                                        key={party}
-                                        type="monotone" 
-                                        dataKey={party}
-                                        stackId="1"
-                                        stroke={colors.stroke}
-                                        fillOpacity={1}
-                                        fill={`url(#${colors.gradient})`}
-                                        connectNulls={false} // Don't connect across null values
-                                    />
-                                );
-                            })}
-                        </AreaChart>
-                    </ResponsiveContainer>
-                ) : (
-                    <div className="h-64 flex items-center justify-center text-gray-500">
-                        Loading election data...
-                    </div>
-                )}
-            </div>
+            {/* Main Layout: Chart 4/5, Stats 1/5 */}
+            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-6">
+                {/* Presidential Election Results Chart */}
+                <div className="lg:col-span-3 bg-indigo-50 rounded-lg shadow-md border border-slate-100 p-4 md:p-6">
+                    <h2 className="text-xl font-semibold mb-1 text-gray-800">
+                        Presidential Popular Vote Results
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-4">
+                        Vote share by party over time
+                    </p>
+                    
+                    {chartData.length > 0 ? (
+                        <ResponsiveContainer width="100%" height={350}>
+                            <AreaChart data={chartData}>
+                                <defs>
+                                    <linearGradient id="colorDem" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#0369a1" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#0369a1" stopOpacity={0.1}/>
+                                    </linearGradient>
+                                    <linearGradient id="colorRep" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#b91c1c" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#b91c1c" stopOpacity={0.1}/>
+                                    </linearGradient>
+                                    <linearGradient id="colorGreen" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#15803d" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#15803d" stopOpacity={0.1}/>
+                                    </linearGradient>
+                                    <linearGradient id="colorLibertarian" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#ca8a04" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#ca8a04" stopOpacity={0.1}/>
+                                    </linearGradient>
+                                    <linearGradient id="colorOther" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="5%" stopColor="#94a3b8" stopOpacity={0.8}/>
+                                        <stop offset="95%" stopColor="#94a3b8" stopOpacity={0.1}/>
+                                    </linearGradient>
+                                </defs>
+                                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                                <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 12 }} />
+                                <YAxis 
+                                    label={!isMobile ? { 
+                                        value: 'Vote Share (%)', 
+                                        angle: -90, 
+                                        position: 'insideLeft', 
+                                        style: { fill: '#6b7280', fontSize: 12 }
+                                    } : undefined}
+                                    tick={{ fill: '#6b7280', fontSize: 12 }}
+                                    domain={[0, 100]}
+                                    allowDecimals={false}
+                                    ticks={[0, 25, 50, 75, 100]}
+                                    width={isMobile ? 35 : 60}
+                                />
+                                <Tooltip 
+                                    contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
+                                    formatter={(value) => `${value}%`}
+                                />
+                                <Legend wrapperStyle={{ paddingTop: '10px' }} />
+                                
+                                {/* Always show Democrat and Republican */}
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="Democrat" 
+                                    stackId="1"
+                                    stroke="#0369a1" 
+                                    fillOpacity={1}
+                                    fill="url(#colorDem)" 
+                                />
+                                <Area 
+                                    type="monotone" 
+                                    dataKey="Republican" 
+                                    stackId="1"
+                                    stroke="#b91c1c" 
+                                    fillOpacity={1}
+                                    fill="url(#colorRep)" 
+                                />
+                                
+                                {/* Dynamically render other parties that exist in the data */}
+                                {allPartiesAcrossYears.map(party => {
+                                    const colors = partyColors[party] || { stroke: '#94a3b8', gradient: 'colorOther' };
+                                    return (
+                                        <Area 
+                                            key={party}
+                                            type="monotone" 
+                                            dataKey={party}
+                                            stackId="1"
+                                            stroke={colors.stroke}
+                                            fillOpacity={1}
+                                            fill={`url(#${colors.gradient})`}
+                                            connectNulls={false}
+                                        />
+                                    );
+                                })}
+                            </AreaChart>
+                        </ResponsiveContainer>
+                    ) : (
+                        <div className="h-64 flex items-center justify-center text-gray-500">
+                            Loading election data...
+                        </div>
+                    )}
+                </div>
 
-            {/* Key Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <StatCard 
-                    title="Most Recent Election"
-                    value={chartData.length > 0 ? chartData[chartData.length - 1]?.year : "—"}
-                    subtitle="Presidential election"
-                />
-                <StatCard 
-                    title="Leading Party"
-                    value={chartData.length > 0 ? getLeadingParty(chartData[chartData.length - 1]) : "—"}
-                    subtitle="Latest result"
-                    color={true}
-                />
-                <StatCard 
-                    title="Historical Trend"
-                    value={chartData.length >= 2 ? getTrend(chartData) : "—"}
-                    subtitle="Last 6 elections"
-                    color={true}
-                />
+                {/* Key Stats Column (3 rows, less padding) */}
+                <div className="flex flex-col gap-4">
+                    <StatCard 
+                        title="Most Recent Election"
+                        value={chartData.length > 0 ? chartData[chartData.length - 1]?.year : "—"}
+                        subtitle="Presidential election"
+                    />
+                    <StatCard 
+                        title="Leading Party"
+                        value={chartData.length > 0 ? getLeadingParty(chartData[chartData.length - 1]) : "—"}
+                        subtitle="Latest result"
+                        color={true}
+                    />
+                    <StatCard 
+                        title="Historical Trend"
+                        value={chartData.length >= 2 ? getTrend(chartData) : "—"}
+                        subtitle="Last 6 elections"
+                        color={true}
+                    />
+                </div>
             </div>
         </>
     );
@@ -229,10 +248,10 @@ function StatCard({ title, value, subtitle, color }) {
     };
 
     return (
-        <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-4">
-            <p className="text-sm text-gray-600 mb-1">{title}</p>
+        <div className="bg-indigo-50 rounded-lg shadow-lg border border-slate-100 p-6 gap-2 flex flex-col justify-center h-full">
+            <p className="text-md text-gray-600">{title}</p>
             <p className={`text-2xl font-bold ${getColor()}`}>{value}</p>
-            <p className="text-xs text-gray-700 mt-1">{subtitle}</p>
+            <p className="text-xs text-gray-700">{subtitle}</p>
         </div>
     );
 }

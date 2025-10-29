@@ -111,13 +111,13 @@ export default function App() {
   }, [API_BASE]);
 
   return (
-    <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-slate-500 to-slate-700 pt-2">
+    <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-slate-500 to-slate-700 pt-2 overflow-x-hidden">
       {/* Header */}
       <header className="flex items-center p-6 px-4 lg:px-20 z-50 justify-between border-b border-slate-200/20">
         {/* Logo on the left */}
         <div className="flex-shrink-0">
           <p
-            className="text-md font-semibold text-slate-100 cursor-pointer"
+            className="text-md font-bold text-slate-100 cursor-pointer"
             onClick={() =>
               navigate("/")
             }
@@ -199,7 +199,7 @@ export default function App() {
 
       {/* Sidebar - Slides in from right */}
       <nav className={`
-        fixed top-0 right-0 h-full sm:w-full lg:w-80 bg-slate-600 border-l border-slate-100/20 z-50
+        fixed top-0 right-0 h-full w-full md:w-80 bg-slate-600 border-l border-slate-100/20 z-50
         transform transition-transform duration-300 ease-in-out shadow-2xl
         ${sidebarOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
@@ -253,10 +253,124 @@ export default function App() {
           <Route path="/district-insights" element={<DistrictOverview />} />
           <Route path="/representatives" element={<RepPage />} />
         </Routes>
+
+        {/* Footer */}
+        <footer className="relative bg-slate-900 text-slate-300 border-t border-slate-700 z-10">
+          <div className="max-w-7xl mx-auto px-6 py-8">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {/* Brand Section */}
+              <div>
+                <h3 className="text-xl font-bold text-slate-100 mb-3">CivicLens</h3>
+                <p className="text-sm text-slate-400">
+                  Making civic data accessible, transparent, and actionable for informed voters.
+                </p>
+              </div>
+
+              {/* Quick Links */}
+              <div>
+                <h4 className="text-sm font-semibold text-slate-100 mb-3 uppercase tracking-wider">
+                  Quick Links
+                </h4>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <button 
+                      onClick={() => navigate("/")}
+                      className="hover:text-slate-100 transition-colors text-left"
+                    >
+                      Home
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      onClick={() => navigate("/district-insights", { state: { locationData } })}
+                      className="hover:text-slate-100 transition-colors text-left"
+                    >
+                      District Data
+                    </button>
+                  </li>
+                  <li>
+                    <button 
+                      onClick={() => navigate("/representatives", { state: { locationData } })}
+                      className="hover:text-slate-100 transition-colors text-left"
+                    >
+                      Your Representatives
+                    </button>
+                  </li>
+                </ul>
+              </div>
+
+              {/* Data Sources */}
+              <div>
+                <h4 className="text-sm font-semibold text-slate-100 mb-3 uppercase tracking-wider">
+                  Data Sources
+                </h4>
+                <ul className="space-y-2 text-sm">
+                  <li>
+                    <a 
+                      href="https://www.fec.gov/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-slate-100 transition-colors"
+                    >
+                      Federal Election Commission
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://www.census.gov/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-slate-100 transition-colors"
+                    >
+                      U.S. Census Bureau
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-slate-100 transition-colors"
+                    >
+                      MIT Data Election Data
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://www.countyhealthrankings.org/health-data/methodology-and-sources/data-documentation" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-slate-100 transition-colors"
+                    >
+                      County Health Rankings
+                    </a>
+                  </li>
+                  <li>
+                    <a 
+                      href="https://github.com/unitedstates" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="hover:text-slate-100 transition-colors"
+                    >
+                      @unitedstates Github
+                    </a>
+                  </li>
+                </ul>
+              </div>
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="mt-8 pt-6 border-t border-slate-800 text-center text-sm text-slate-500">
+              <p>&copy; {new Date().getFullYear()} CivicLens. All rights reserved.</p>
+            </div>
+          </div>
+        </footer>
       </main>
     </div>
   );
 }
+
+
 
 // Wrap App in Router
 export function Root() {

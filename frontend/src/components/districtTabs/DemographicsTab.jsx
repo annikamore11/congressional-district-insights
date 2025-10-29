@@ -218,7 +218,6 @@ export default function DemographicsTab({ demographicsData }) {
                 </div>
             </div>
 
-            {/* Hispanic/Latino Ethnicity - Separate Section */}
             {/* Divorce Rate Trend + Hispanic/Latino Ethnicity side by side */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Hispanic/Latino Ethnicity - Left Side */}

@@ -1,9 +1,17 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { AreaChart, Area, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer} from "recharts";
 import { TrendingUp, TrendingDown, Minus } from "lucide-react";
 import StatCarousel from "./StatCarousel";
 
 export default function EducationTab({ educationData }) {
+    const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+    
+        useEffect(() => {
+            const handleResize = () => setIsMobile(window.innerWidth < 768);
+            window.addEventListener('resize', handleResize);
+            return () => window.removeEventListener('resize', handleResize);
+        }, []);
+
     const processedData = useMemo(() => {
         if (!educationData || educationData.length === 0) return null;
 
@@ -159,97 +167,99 @@ export default function EducationTab({ educationData }) {
 
     return (
         <div className="space-y-6">
-            {/* Key Stats Grid */}
-            <StatCarousel>
-                <StatCard
-                    title="High School Grad Rate"
-                    value={`${processedData.currentHS.toFixed(1)}%`}
-                    subtitle={`US avg: ${processedData.usHS.toFixed(1)}%`}
-                    latest={`Latest: ${processedData.latestYear}`}
-                    trend1Yr={processedData.hsChange1Yr}
-                    trend10Yr={processedData.hsChange10Yr}
-                    source="Census Bureau ACS PUMS 5-Year Estimate"
-                />
-                <StatCard
-                    title="Bachelor's Degree+"
-                    value={`${processedData.currentBA.toFixed(1)}%`}
-                    subtitle={`US avg: ${processedData.usBA.toFixed(1)}%`}
-                    latest={`Latest: ${processedData.latestYear}`}
-                    trend1Yr={processedData.baChange1Yr}
-                    trend10Yr={processedData.baChange10Yr}
-                    source="Census Bureau ACS PUMS 5-Year Estimate"
-                />
-                <StatCard
-                    title="School Enrollment"
-                    value={`${processedData.currentEnrollment.toFixed(1)}%`}
-                    subtitle={`US avg: ${processedData.usEnrollment.toFixed(1)}%`}
-                    latest={`Latest: ${processedData.latestYear}`}
-                    trend1Yr={processedData.enrollmentChange1Yr}
-                    trend10Yr={processedData.enrollmentChange10Yr}
-                    source="Census Bureau ACS PUMS 5-Year Estimate"
-                />
-                <StatCard
-                    title="Student Funding Adequacy"
-                    value={processedData.currentFunding >= 0 ? 'Adequate' : 'Below adequate'}
-                    subtitle={`Gap: $${(Math.abs(processedData.currentFunding) / 1000).toFixed(1)}k per pupil`}
-                    latest={`Latest: ${processedData.latestYearFunding}`}
-                    trend1Yr={processedData.fundingChange1Yr}
-                    trend10Yr={processedData.fundingChange10Yr}
-                    isFunding={true}
-                    fundingValue={processedData.currentFunding}
-                    source="County Health Rankings"
-                />
-            </StatCarousel>
+           {/* Educational Attainment Progress */}
+           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+                <div className="lg:col-span-3 bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-4 md:p-6">
+                    <h2 className="text-lg font-semibold mb-1 text-gray-800">
+                        Educational Attainment Over Time
+                    </h2>
+                    <p className="text-sm text-gray-600 mb-4">
+                        Track progress in high school and college completion rates
+                    </p>
 
-            {/* Get rid of the gap and add latest year to all cards and add source}
+                    <ResponsiveContainer width="100%" height={300}>
+                        <LineChart data={processedData.attainmentTrend}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                            <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} />
+                            <YAxis 
+                                label={!isMobile ? { 
+                                    value: 'Percent (%)', 
+                                    angle: -90, 
+                                    position: 'insideLeft', 
+                                    style: { fill: '#6b7280', fontSize: 12 }
+                                } : undefined}
+                                tick={{ fill: '#6b7280', fontSize: 12 }}
+                                domain={[0,100]}
+                                allowDecimals={false}
+                                width={isMobile ? 35 : 60}
+                            />
+                            <Tooltip 
+                                contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
+                                formatter={(value) => `${value.toFixed(1)}%`}
+                            />
+                            <Legend />
+                            <Line 
+                                type="monotone" 
+                                dataKey="localHS" 
+                                stroke="#3b82f6" 
+                                strokeWidth={3}
+                                name="High School+"
+                                dot={{ r: 3 }}
+                            />
+                            <Line 
+                                type="monotone" 
+                                dataKey="localBA" 
+                                stroke="#10b981" 
+                                strokeWidth={3}
+                                name="Bachelor's+"
+                                dot={{ r: 3 }}
+                            />
+                            <Line 
+                                type="monotone" 
+                                dataKey="localDoctorate" 
+                                stroke="#8b5cf6" 
+                                strokeWidth={2}
+                                name="Doctorate"
+                                dot={{ r: 2 }}
+                                strokeDasharray="5 5"
+                            />
+                        </LineChart>
+                    </ResponsiveContainer>
+                </div>
 
-            {/* Educational Attainment Progress */}
-            <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-6">
-                <h2 className="text-lg font-semibold mb-1 text-gray-800">
-                    Educational Attainment Over Time
-                </h2>
-                <p className="text-sm text-gray-600 mb-4">
-                    Track progress in high school and college completion rates
-                </p>
-
-                <ResponsiveContainer width="100%" height={300}>
-                    <LineChart data={processedData.attainmentTrend}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                        <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} />
-                        <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} domain={[0, 100]} />
-                        <Tooltip 
-                            contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '6px' }}
-                            formatter={(value) => `${value.toFixed(1)}%`}
+                {/* Key Stats Grid */}
+                <div className="flex flex-col gap-4">
+                    <StatCarousel layout="vertical">
+                        <StatCard
+                            title="High School Grad Rate"
+                            value={`${processedData.currentHS.toFixed(1)}%`}
+                            subtitle={`US avg: ${processedData.usHS.toFixed(1)}%`}
+                            trend1Yr={processedData.hsChange1Yr}
+                            trend10Yr={processedData.hsChange10Yr}
+                            source="Census Bureau ACS PUMS 5-Year Estimate"
                         />
-                        <Legend />
-                        <Line 
-                            type="monotone" 
-                            dataKey="localHS" 
-                            stroke="#3b82f6" 
-                            strokeWidth={3}
-                            name="High School+"
-                            dot={{ r: 3 }}
+                        <StatCard
+                            title="Bachelor's Degree+"
+                            value={`${processedData.currentBA.toFixed(1)}%`}
+                            subtitle={`US avg: ${processedData.usBA.toFixed(1)}%`}
+                            trend1Yr={processedData.baChange1Yr}
+                            trend10Yr={processedData.baChange10Yr}
+                            source="Census Bureau ACS PUMS 5-Year Estimate"
                         />
-                        <Line 
-                            type="monotone" 
-                            dataKey="localBA" 
-                            stroke="#10b981" 
-                            strokeWidth={3}
-                            name="Bachelor's+"
-                            dot={{ r: 3 }}
+                        <StatCard
+                            title="Student Funding Adequacy"
+                            value={processedData.currentFunding >= 0 ? 'Adequate' : 'Below adequate'}
+                            subtitle={`Gap: $${(Math.abs(processedData.currentFunding) / 1000).toFixed(1)}k per pupil`}
+                            trend1Yr={processedData.fundingChange1Yr}
+                            trend10Yr={processedData.fundingChange10Yr}
+                            isFunding={true}
+                            fundingValue={processedData.currentFunding}
+                            source="County Health Rankings"
                         />
-                        <Line 
-                            type="monotone" 
-                            dataKey="localDoctorate" 
-                            stroke="#8b5cf6" 
-                            strokeWidth={2}
-                            name="Doctorate"
-                            dot={{ r: 2 }}
-                            strokeDasharray="5 5"
-                        />
-                    </LineChart>
-                </ResponsiveContainer>
+                    </StatCarousel>
+                </div>
             </div>
+
 
             {/* Enrollment and Funding */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -257,34 +267,47 @@ export default function EducationTab({ educationData }) {
                     <h2 className="text-lg font-semibold mb-1 text-gray-800">
                         School Enrollment Breakdown
                     </h2>
-                    <p className="text-sm text-gray-600 mb-4 pb-10">
+                    <p className="text-sm text-gray-600 mb-4">
                         {processedData.privateShare.toFixed(1)}% of enrolled students attend private schools
                     </p>
-
-                    <div className="flex items-center justify-center gap-8">
-                        <div className="text-center">
-                            <div className="text-4xl font-bold text-blue-600">
-                                {processedData.currentPublic.toFixed(1)}%
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1">Public School</div>
-                        </div>
-                        <div className="text-center">
-                            <div className="text-4xl font-bold text-pink-600">
-                                {processedData.currentPrivate.toFixed(1)}%
-                            </div>
-                            <div className="text-sm text-gray-600 mt-1">Private School</div>
-                        </div>
-                    </div>
-
-                    <div className="mt-6 h-3 bg-gray-200 rounded-full overflow-hidden flex">
-                        <div 
-                            className="bg-blue-600" 
-                            style={{ width: `${(processedData.currentPublic / processedData.currentEnrollment) * 100}%` }}
+                    <div className="space-y-4">
+                        <StatCard
+                            title="School Enrollment"
+                            value={`${processedData.currentEnrollment.toFixed(1)}%`}
+                            subtitle={`US avg: ${processedData.usEnrollment.toFixed(1)}%`}
+                            trend1Yr={processedData.enrollmentChange1Yr}
+                            trend10Yr={processedData.enrollmentChange10Yr}
+                            source="Census Bureau ACS PUMS 5-Year Estimate"
+                            changeBgColor={true}
                         />
-                        <div 
-                            className="bg-pink-600" 
-                            style={{ width: `${(processedData.currentPrivate / processedData.currentEnrollment) * 100}%` }}
-                        />
+                        <div className="bg-slate-50 rounded-lg shadow-sm p-4 border border-slate-300/50">
+                            <div className="flex items-center justify-center gap-8">
+                                <div className="text-center">
+                                    <div className="text-4xl font-bold text-blue-600">
+                                        {processedData.currentPublic.toFixed(1)}%
+                                    </div>
+                                    <div className="text-sm text-gray-600 mt-1">Public School</div>
+                                </div>
+                                <div className="text-center">
+                                    <div className="text-4xl font-bold text-pink-600">
+                                        {processedData.currentPrivate.toFixed(1)}%
+                                    </div>
+                                    <div className="text-sm text-gray-600 mt-1">Private School</div>
+                                </div>
+                            </div>
+
+                            <div className="mt-6 h-3 bg-gray-200 rounded-full overflow-hidden flex">
+                                <div 
+                                    className="bg-blue-600" 
+                                    style={{ width: `${(processedData.currentPublic / processedData.currentEnrollment) * 100}%` }}
+                                />
+                                <div 
+                                    className="bg-pink-600" 
+                                    style={{ width: `${(processedData.currentPrivate / processedData.currentEnrollment) * 100}%` }}
+                                />
+                            </div>
+                        </div>
+                        
                     </div>
                 </div>
 
@@ -340,7 +363,7 @@ export default function EducationTab({ educationData }) {
     );
 }
 
-function StatCard({ title, value, subtitle, latest, trend1Yr, trend10Yr, isFunding, fundingValue, source }) {
+function StatCard({ title, value, subtitle, trend1Yr, trend10Yr, isFunding, fundingValue, changeBgColor = false }) {
     const getTrendDisplay = (trend, label) => {
         if (trend === null || trend === undefined) return null;
         const isPositive = trend > 0;
@@ -381,11 +404,10 @@ function StatCard({ title, value, subtitle, latest, trend1Yr, trend10Yr, isFundi
         : 'text-gray-900';
 
     return (
-        <div className="bg-indigo-50 rounded-lg shadow-sm border border-gray-200 p-4">
+        <div className={`${changeBgColor ? 'bg-slate-50' : 'bg-indigo-50'} rounded-lg shadow-lg border border-gray-200 p-4`}>
             <p className="text-sm text-gray-600 mb-1">{title}</p>
             <p className={`text-2xl mb-2 font-bold ${valueColor}`}>{value}</p>
             <p className="text-xs text-gray-500 mb-1">{subtitle}</p>
-            <p className="text-xs text-gray-500 mb-2">{latest}</p>
             
             {(trend1Yr !== null || trend10Yr !== null) && (
                 <div className="flex gap-5 text-xs">

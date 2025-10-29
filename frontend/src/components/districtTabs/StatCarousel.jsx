@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 
-export default function StatCarousel({ children }) {
+export default function StatCarousel({ children, layout = 'grid' }) {
     const [currentIndex, setCurrentIndex] = useState(0);
     const [touchStart, setTouchStart] = useState(0);
     const [touchEnd, setTouchEnd] = useState(0);
@@ -37,7 +37,7 @@ export default function StatCarousel({ children }) {
     return (
         <>
             {/* Mobile Carousel */}
-            <div className="md:hidden relative pb-6">
+            <div className="md:hidden relative">
                 <div 
                     ref={containerRef}
                     className="overflow-hidden"
@@ -52,7 +52,7 @@ export default function StatCarousel({ children }) {
                         {cards.map((card, index) => (
                             <div 
                                 key={index} 
-                                className="w-full flex-shrink-0 px-4"
+                                className="w-full flex-shrink-0"
                             >
                                 {card}
                             </div>
@@ -75,10 +75,18 @@ export default function StatCarousel({ children }) {
                 </div>
             </div>
 
-            {/* Desktop Grid */}
-            <div className={`hidden md:grid gap-4 ${cards.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
-                {cards}
-            </div>
+            {/* Desktop - Conditional Layout */}
+            {layout === 'vertical' ? (
+                /* Vertical Stack for side column */
+                <div className="hidden md:flex md:flex-col gap-4 h-full">
+                    {cards}
+                </div>
+            ) : (
+                /* Horizontal Grid for full-width sections */
+                <div className={`hidden md:grid gap-4 ${cards.length === 3 ? 'md:grid-cols-3' : 'md:grid-cols-4'}`}>
+                    {cards}
+                </div>
+            )}
         </>
     );
 }
