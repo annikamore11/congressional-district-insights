@@ -5,7 +5,7 @@ import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
 let isApiConfigured = false;
 
-function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = false }) {
+function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = false, prominent = false }) {
   const [value, setValue] = useState(initialValue);
   const [suggestions, setSuggestions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -157,7 +157,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
           className={`
             border border-gray-600 bg-slate-900 text-slate-100 shadow-sm shadow-slate-500/30 
             placeholder-slate-300 px-3 rounded text-sm focus:outline-none focus:ring-2 focus:ring-indigo-600
-            ${isMobile && isFocused ? 'w-full text-base py-3' : 'w-48 md:w-64 py-1.5'}
+            ${(isMobile && isFocused) || prominent ? 'w-full text-base py-3' : 'w-48 md:w-64 py-1.5'}
           `}
           onKeyPress={(e) => {
             if (e.key === 'Enter' && value) {
@@ -173,7 +173,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
           <ul className={`
             absolute top-full left-0 mt-2 bg-indigo-50 border border-slate-900 
             rounded-md shadow-lg max-h-60 overflow-auto z-[100]
-            ${isMobile && isFocused ? 'w-full' : 'w-[400px]'}
+            ${(isMobile && isFocused) || prominent ? 'w-full' : 'w-[400px]'}
           `}>
             {suggestions.map((suggestion, idx) => (
               <li

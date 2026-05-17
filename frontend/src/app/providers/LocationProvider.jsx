@@ -1,18 +1,42 @@
 "use client";
 
 import { createContext, useContext, useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { MapPin, Menu, X, Users } from "lucide-react";
 import AddressAutocomplete from "@/components/AddressAutocomplete";
 import NavButton from "@/components/navButton";
 
 const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:5002";
 
-const LocationContext = createContext({ locationData: "", fetchLocation: () => {} });
+const LocationContext = createContext({
+  locationData: "",
+  fetchLocation: () => {},
+  displayAddress: "",
+});
 
 // Shared access to the geocoded location across all pages.
 export function useLocationData() {
   return useContext(LocationContext);
+}
+
+// Inline nav link for the desktop header.
+function HeaderNavLink({ to, label }) {
+  const router = useRouter();
+  const pathname = usePathname();
+  const isActive = pathname === to;
+
+  return (
+    <button
+      onClick={() => router.push(to)}
+      className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+        isActive
+          ? "text-slate-100 bg-slate-800/60"
+          : "text-slate-300 hover:text-slate-100 hover:bg-slate-800/30"
+      }`}
+    >
+      {label}
+    </button>
+  );
 }
 
 export default function LocationProvider({ children }) {
@@ -62,22 +86,27 @@ export default function LocationProvider({ children }) {
   }, []);
 
   return (
-    <LocationContext.Provider value={{ locationData, fetchLocation }}>
+    <LocationContext.Provider value={{ locationData, fetchLocation, displayAddress }}>
       <div className="h-screen w-screen flex flex-col bg-gradient-to-br from-slate-500 to-slate-700 pt-2 overflow-x-hidden">
         {/* Header */}
         <header className="flex items-center p-6 px-4 lg:px-20 z-50 justify-between border-b border-slate-200/20">
-          {/* Logo on the left */}
-          <div className="flex-shrink-0">
+          {/* Logo + desktop navigation */}
+          <div className="flex items-center gap-6 lg:gap-10">
             <p
-              className="text-md font-bold text-slate-100 cursor-pointer"
+              className="text-md font-bold text-slate-100 cursor-pointer flex-shrink-0"
               onClick={() => router.push("/")}
             >
               CivicLens
             </p>
+
+            <nav className="hidden md:flex items-center gap-1">
+              <HeaderNavLink to="/district-insights" label="District Data" />
+              <HeaderNavLink to="/representatives" label="Your Representatives" />
+            </nav>
           </div>
 
           {/* Right side controls */}
-          <div className="ml-auto flex items-center gap-4">
+          <div className="flex items-center gap-4">
             {/* Unified Address/ZIP Input */}
             <div className="flex items-center gap-2">
               <span className="text-xs text-slate-200 md:inline hidden">
@@ -117,20 +146,11 @@ export default function LocationProvider({ children }) {
               </div>
             </div>
 
-            {/* Login Button */}
-            <button className="hidden sm:flex items-center text-slate-100 hover:text-slate-300 text-md transition-colors px-3 py-1.5 rounded gap-1">
-              <span>Log In</span>
-            </button>
-
-            {/* Sign Up Button */}
-            <button className="hidden sm:flex items-center bg-slate-900 hover:bg-slate-700 shadow-sm shadow-slate-500/30 text-slate-100 text-md px-3 py-1.5 rounded gap-1 transition-colors">
-              <span>Sign Up</span>
-            </button>
-
-            {/* Sidebar Toggle Button */}
+            {/* Sidebar Toggle Button — mobile only */}
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="flex items-center text-slate-100 hover:text-slate-300 transition-colors px-2 py-1.5 rounded gap-2"
+              className="flex md:hidden items-center text-slate-100 hover:text-slate-300 transition-colors px-2 py-1.5 rounded gap-2"
+              aria-label="Open navigation menu"
             >
               <Menu size={25} />
             </button>
