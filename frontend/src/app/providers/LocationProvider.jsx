@@ -48,10 +48,10 @@ export default function LocationProvider({ children }) {
   useEffect(() => {
     async function fetchInitialLocation() {
       try {
-        const resp = await fetch("https://ipwho.is/");
+        const resp = await fetch("https://ipapi.co/json/");
         const data = await resp.json();
 
-        if (data && data.success !== false && data.postal) {
+        if (data && !data.error && data.postal) {
           fetchLocation(data.postal); // Use the single function
         }
       } catch (err) {
