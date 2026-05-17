@@ -82,8 +82,18 @@ export default function LandingView() {
   }, [stateAbbr, county]);
 
   return (
-    <div className="bg-gradient-to-br from-slate-500 to-slate-700 text-slate-100 min-h-full">
-      <div className="max-w-6xl mx-auto px-6 py-12 lg:py-16">
+    <div className="relative bg-gradient-to-br from-slate-500 to-slate-700 text-slate-100 min-h-full overflow-hidden">
+      {/* Faded map texture, blended into the gradient */}
+      <div
+        className="pointer-events-none absolute inset-0 bg-cover bg-center opacity-20"
+        style={{
+          backgroundImage: "url('/map.jpg')",
+          maskImage: "linear-gradient(to bottom, black 0%, transparent 75%)",
+          WebkitMaskImage:
+            "linear-gradient(to bottom, black 0%, transparent 75%)",
+        }}
+      />
+      <div className="relative z-10 max-w-6xl mx-auto px-6 py-12 lg:py-16">
         {/* Heading + mission */}
         <div className="mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold mb-3">
