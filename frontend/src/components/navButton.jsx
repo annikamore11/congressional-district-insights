@@ -1,17 +1,17 @@
-import { useNavigate, useLocation } from "react-router-dom";
+"use client";
 
-function NavButton({ to, icon, label, locationData, onClick }) {
-    const location = useLocation();
-    const navigate = useNavigate();
-    const isActive = location.pathname === to;
-    
+import { useRouter, usePathname } from "next/navigation";
+
+function NavButton({ to, icon, label, onClick }) {
+    const pathname = usePathname();
+    const router = useRouter();
+    const isActive = pathname === to;
+
     const handleClick = () => {
-        navigate(to, { 
-            state: { locationData } 
-        });
-        onClick?.(); 
+        router.push(to);
+        onClick?.();
     };
-    
+
     return (
         <button
             onClick={handleClick}

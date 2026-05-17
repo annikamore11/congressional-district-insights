@@ -1,3 +1,5 @@
+"use client";
+
 import { useEffect, useState, useRef } from "react";
 import { setOptions, importLibrary } from "@googlemaps/js-api-loader";
 
@@ -24,7 +26,7 @@ function AddressAutocomplete({ onSelectAddress, initialValue="", isMobile = fals
         // Initialize the API loader
         if (!isApiConfigured) {
           setOptions({
-            key: import.meta.env.VITE_GOOGLE_API_KEY
+            key: process.env.NEXT_PUBLIC_GOOGLE_API_KEY
           });
           isApiConfigured = true;
         }

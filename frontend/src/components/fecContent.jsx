@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import Chart from "chart.js/auto";
 import {STATE_FULL} from './constants';
@@ -19,7 +21,7 @@ export default function FECContent({ member, fecCache, setFecCache }) {
   const [aggregatedData, setAggregatedData] = useState(null);
   const [topState, setTopState] = useState(null);
 
-  const API_BASE = import.meta.env.VITE_API_BASE || "http://127.0.0.1:5002";
+  const API_BASE = process.env.NEXT_PUBLIC_API_BASE || "http://127.0.0.1:5002";
 
   // Cleanup on unmount
   useEffect(() => {
