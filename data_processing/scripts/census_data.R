@@ -13,7 +13,7 @@ census_api_key(Sys.getenv("CENSUS_API_KEY"), install = TRUE, overwrite = TRUE)
 
 # Variable Selection
 acs_vars <- load_variables(
-  2023,
+  2024,
   dataset = c("acs5"),
   cache = TRUE
 )
@@ -125,7 +125,7 @@ get_clean_acs <- function(geo, year) {
 }
 
 geos <- c("us", "state", "county", "congressional district")
-years <- 2013:2023   # last 10 years
+years <- 2013:2024
 
 all_data <- purrr::map_dfr(years, function(y) {
   purrr::map_dfr(geos, function(g) get_clean_acs(g, y))

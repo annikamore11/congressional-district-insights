@@ -13,13 +13,13 @@ census_api_key(Sys.getenv("CENSUS_API_KEY"), install = TRUE, overwrite = TRUE)
 
 # Variable Selection
 acs_vars <- load_variables(
-  2023,
+  2024,
   dataset = c("acs5"),
   cache = TRUE
 )
 
-v <- load_variables(2023, "acs5/subject", cache = TRUE)
-View(v %>% filter(str_detect(name, "DP04")))
+v <- load_variables(2024, "acs5/subject", cache = TRUE)
+if (interactive()) View(v %>% filter(grepl("DP04", name)))
 
 # Search for variables containing a specific word or search for descriptions based on variable code
 pop_vars <- acs_vars %>%
@@ -94,7 +94,7 @@ get_clean_acs <- function(geo, year) {
 }
 
 geos <- c("us", "state", "county", "congressional district")
-years <- 2013:2023   # last 10 years
+years <- 2013:2024
 
 all_data <- purrr::map_dfr(years, function(y) {
   purrr::map_dfr(geos, function(g) get_clean_acs(g, y))
